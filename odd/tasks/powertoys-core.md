@@ -64,10 +64,13 @@ item, Carbon `RegisterEventHotKey` for globals, one coordinator + one module per
        Route: delegated writer. Check: `swift build` + manual run.
        DONE 2026-10-13 commit 36acb96. Build green (spot-checked). Assess medium/
        under_budget. Main display only; OCR sync on main thread (ponytail-marked).
-- [ ] T4 — Advanced Paste: ⌃⇧V menu listing transforms valid for current clipboard
+- [x] T4 — Advanced Paste: ⌃⇧V menu listing transforms valid for current clipboard
        content, transform engine (plain text, OCR, file-drop paste, CSV/XML→JSON,
        HTML→MD), synthesized ⌘V via CGEvent. Pure transform functions get tests (TDD:
        RED→GREEN). Route: delegated writer. Check: `swift test` + `swift build`.
+       DONE 2026-10-13 commit eba2f01. 42 tests green (swift-testing; XCTest absent
+       on CLT toolchain). Audio ships as .m4a (documented swap). Assess medium/
+       under_budget. ⌘V synthesis + menu smoke pending user run.
 
 ## Test policy
 Skeleton/overlay/hotkey code: no meaningful deterministic RED → structural checks
@@ -90,3 +93,7 @@ branch/PR strategy decided only if a remote appears).
   under_budget (1140 diff lines, due=false). Next: T4 (last task).
 - NOTE (T4 scope decision, parent): true MP3 has no public encoder on Apple
   platforms → audio transcode ships as .m4a (AAC); documented swap, not a silent lie.
+- 2026-10-13: T4 done (eba2f01, delegated writer, swift-test 42 green, RED→GREEN
+  observed). Assess medium/under_budget (2703 diff lines, due=false — provider
+  owns budget math). ALL v1 TASKS COMPLETE. Remaining: user manual smoke on real
+  Mac (permissions, hotkeys, OCR, paste synthesis).
