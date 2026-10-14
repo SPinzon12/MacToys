@@ -59,9 +59,11 @@ item, Carbon `RegisterEventHotKey` for globals, one coordinator + one module per
        under_budget. Manual smoke pending (Esc needs overlay key status; writer
        noted). Uses deprecated CGDisplayCreateImage — ponytail-marked, SCK upgrade
        path.
-- [ ] T3 — Text Extractor: region-select overlay over screen capture, Vision
+- [x] T3 — Text Extractor: region-select overlay over screen capture, Vision
        `VNRecognizeTextRequest` on selection, text → clipboard; word-click mode.
        Route: delegated writer. Check: `swift build` + manual run.
+       DONE 2026-10-13 commit 36acb96. Build green (spot-checked). Assess medium/
+       under_budget. Main display only; OCR sync on main thread (ponytail-marked).
 - [ ] T4 — Advanced Paste: ⌃⇧V menu listing transforms valid for current clipboard
        content, transform engine (plain text, OCR, file-drop paste, CSV/XML→JSON,
        HTML→MD), synthesized ⌘V via CGEvent. Pure transform functions get tests (TDD:
@@ -84,3 +86,7 @@ branch/PR strategy decided only if a remote appears).
 - 2026-10-13: T2 done (5bed71e, delegated writer, build verified + clean rebuild).
   Assess medium/under_budget (provider owns budget math; 700 diff lines, due=false).
   Slice continues 9e077c4... Next: T3.
+- 2026-10-13: T3 done (36acb96, delegated writer, build verified). Assess medium/
+  under_budget (1140 diff lines, due=false). Next: T4 (last task).
+- NOTE (T4 scope decision, parent): true MP3 has no public encoder on Apple
+  platforms → audio transcode ships as .m4a (AAC); documented swap, not a silent lie.

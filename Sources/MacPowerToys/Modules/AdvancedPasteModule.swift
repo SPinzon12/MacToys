@@ -1,6 +1,10 @@
-/// Advanced Paste — T4 fills in the transform engine; T1 only proves the wiring.
+/// Advanced Paste — ⌃⇧V / menu → transform menu for the current clipboard;
+/// the chosen transform runs, then a synthetic ⌘V pastes the result.
 enum AdvancedPasteModule {
     static func trigger() {
-        print("AdvancedPaste: not implemented yet (T4)")
+        // Carbon hotkey callbacks are not main-actor isolated; hop before AppKit.
+        Task { @MainActor in
+            PasteCoordinator.shared.showMenu()
+        }
     }
 }

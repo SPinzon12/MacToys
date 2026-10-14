@@ -15,9 +15,11 @@ to the Mac behind global hotkeys.
 | -------------- | ------ | ------------------- | ----------------- | ------------------- | ------------------- |
 | Color Picker   | ⌃⇧C    | ✅ wired (stub)     | ✅ lens → HEX copy  | —                   | —                   |
 | Text Extractor | ⌃⇧O    | ✅ wired (stub)     | —                 | ✅ region + word OCR | —                   |
-| Advanced Paste | ⌃⇧V    | ✅ wired (stub)     | —                 | —                   | ⬜ transforms + tests |
+| Advanced Paste | ⌃⇧V    | ✅ wired (stub)     | —                 | —                   | ✅ transforms + tests |
 
 - ✅ = done · ⬜ = planned · — = not applicable
+
+All four tasks are done.
 
 T1 delivers the skeleton: menu-bar status item, global hotkey registration,
 permission preflight, and module stubs. T2 delivers the Color Picker: **⌃⇧C**
@@ -32,8 +34,32 @@ the clipboard (small crops are upscaled ×1.5 first, like PowerOCR); a plain
 click instead copies just the word under the cursor — the full screen is OCR'd
 once and cached, so later clicks are instant. Esc or right-click cancels
 (re-pressing the hotkey also cancels). It needs the same **Screen Recording**
-permission as the Color Picker. Only Advanced Paste still logs
-`AdvancedPaste: not implemented yet (T4)`.
+permission as the Color Picker.
+
+T4 delivers Advanced Paste: **⌃⇧V** reads the clipboard and pops a menu at the
+cursor listing only the transforms valid for the current content. Choosing one
+transforms the clipboard, writes the result back, and synthesizes a **⌘V** into
+the app that had focus before the menu opened. The transform list:
+
+- **Plain Text** — from text or HTML (tags stripped, entities decoded).
+- **Image to Text (OCR)** — Vision OCR of a clipboard image.
+- **Paste as .txt / .png / .html file** — writes a unique temp file and puts
+  its file URL on the clipboard (Finder-style paste).
+- **XML/CSV → JSON** — leading `<` means XML (Foundation `XMLParser`), else
+  CSV with a header row; pretty-printed JSON lands on the clipboard.
+- **HTML → Markdown** — minimal subset (h1–h6, p, br, strong, em, links,
+  lists, code, pre, blockquote); everything else is stripped to text.
+- **Video → MP4** / **Audio → M4A** — `AVAssetExportSession` transcode of a
+  copied media file. Upstream PowerToys offers MP3, but Apple ships no public
+  MP3 encoder, so audio lands as AAC/`.m4a` instead — the honest swap.
+
+The synthetic ⌘V needs the **Accessibility** permission — without it the
+transform still runs and the result still lands on the clipboard, but
+auto-paste is skipped and one alert explains where to grant the permission.
+
+Unit tests cover the pure transforms (CSV/XML → JSON, HTML → Markdown, plain
+text, menu validity) with `swift test`; OCR, transcoding, and paste synthesis
+are environment-bound and covered by manual use.
 
 ## Build & run
 
@@ -91,4 +117,12 @@ Sources/MacPowerToys/
   Modules/                one module entry per feature
   ColorPicker/            Color Picker overlay (session + lens view)
   TextExtractor/          Text Extractor overlay (session + selection + OCR)
+  AdvancedPaste/          transform menu + pure transforms (tested) + ⌘V paste
+Tests/MacPowerToysTests/  swift-testing suites for the transform engine
+```
+
+Run the tests with:
+
+```sh
+swift test
 ```
