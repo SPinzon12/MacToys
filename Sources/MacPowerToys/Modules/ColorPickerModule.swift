@@ -1,6 +1,13 @@
-/// Color Picker — T2 fills in the magnifier-lens overlay; T1 only proves the wiring.
+/// Color Picker — ⌃⇧C / menu → magnifier-lens overlay; click copies HEX.
 enum ColorPickerModule {
     static func trigger() {
-        print("ColorPicker: not implemented yet (T2)")
+        // Carbon hotkey callbacks are not main-actor isolated; hop before AppKit.
+        Task { @MainActor in
+            if let active = ColorPickerSession.current {
+                active.finish() // re-trigger while active cancels; never stacks
+            } else {
+                ColorPickerSession.start()
+            }
+        }
     }
 }

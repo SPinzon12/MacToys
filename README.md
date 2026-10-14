@@ -4,7 +4,7 @@ A personal macOS menu-bar utility ("my PowerToys"): three quick clipboard/screen
 utilities from [microsoft/PowerToys](https://github.com/microsoft/PowerToys) ported
 to the Mac behind global hotkeys.
 
-- **Color Picker** — zoom lens → click → copy HEX (and RGB).
+- **Color Picker** — zoom lens → click → copy HEX.
 - **Text Extractor** — select a screen region → OCR → clipboard.
 - **Advanced Paste** — deterministic clipboard transforms (plain text, OCR, files,
   CSV/XML→JSON, HTML→Markdown) behind ⌃⇧V.
@@ -13,15 +13,19 @@ to the Mac behind global hotkeys.
 
 | Module         | Hotkey | T1 (skeleton)       | T2 (Color Picker) | T3 (Text Extractor) | T4 (Advanced Paste) |
 | -------------- | ------ | ------------------- | ----------------- | ------------------- | ------------------- |
-| Color Picker   | ⌃⇧C    | ✅ wired (stub)     | ⬜ overlay + HEX   | —                   | —                   |
+| Color Picker   | ⌃⇧C    | ✅ wired (stub)     | ✅ lens → HEX copy  | —                   | —                   |
 | Text Extractor | ⌃⇧O    | ✅ wired (stub)     | —                 | ⬜ region OCR        | —                   |
 | Advanced Paste | ⌃⇧V    | ✅ wired (stub)     | —                 | —                   | ⬜ transforms + tests |
 
 - ✅ = done · ⬜ = planned · — = not applicable
 
 T1 delivers the skeleton: menu-bar status item, global hotkey registration,
-permission preflight, and module stubs. Run the app now and each hotkey logs
-`...: not implemented yet (Tn)`.
+permission preflight, and module stubs. T2 delivers the Color Picker: **⌃⇧C**
+opens a magnified lens that follows the cursor; left-click copies the pixel
+under the cursor as `#RRGGBB` to the clipboard, Esc or right-click cancels
+(re-pressing the hotkey also cancels). It needs the **Screen Recording**
+permission — without it, one alert explains where to grant it. The remaining
+hotkeys still log `...: not implemented yet (Tn)`.
 
 ## Build & run
 
@@ -76,5 +80,6 @@ Sources/MacPowerToys/
   AppDelegate.swift       status item + menu + wiring
   HotKeys.swift           Carbon global hotkeys
   Permissions.swift       Screen Recording / Accessibility preflight
-  Modules/                one stub per feature
+  Modules/                one module entry per feature
+  ColorPicker/            Color Picker overlay (session + lens view)
 ```

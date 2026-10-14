@@ -45,10 +45,13 @@ Single SPM executable `mac-powertoys`: accessory (`.accessory`) NSApplication, o
 item, Carbon `RegisterEventHotKey` for globals, one coordinator + one module per feature.
 
 ## Tasks
-- [ ] T1 — Skeleton: Package.swift, menu-bar app + status item, global hotkey
+- [x] T1 — Skeleton: Package.swift, menu-bar app + status item, global hotkey
        registration, permission request flow (Screen Recording + Accessibility),
        module wiring stubs, README (build/run/permissions). Route: delegated writer.
        Check: `swift build` passes; app runs, status item visible, hotkeys registered.
+       DONE 2026-10-13 commit 183adb3 (310 lines). Build green (spot-checked).
+       Review: medium/under_budget (no review due yet, slice pending).
+       NOTE: manual smoke (status item + hotkeys + permission alert) pending user run.
 - [ ] T2 — Color Picker: overlay window with magnifier lens, 1×1 pixel sampling,
        click → copy HEX to NSPasteboard. Route: delegated writer.
        Check: `swift build` + manual hotkey run (needs Screen Recording grant).
@@ -72,3 +75,5 @@ branch/PR strategy decided only if a remote appears).
 ## Progress log
 - 2026-10-13: exploration done (3 modules mapped, path:line handoff in session).
   Toolchain verified: Swift 6.4 / CommandLineTools / SDK 27.0.
+- 2026-10-13: T1 done (183adb3, delegated writer, build verified, RDD assess
+  medium/under_budget). Slice 9e077c4..183adb3 = 310 lines. Next: T2.
