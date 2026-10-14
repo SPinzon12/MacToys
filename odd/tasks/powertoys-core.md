@@ -52,9 +52,13 @@ item, Carbon `RegisterEventHotKey` for globals, one coordinator + one module per
        DONE 2026-10-13 commit 183adb3 (310 lines). Build green (spot-checked).
        Review: medium/under_budget (no review due yet, slice pending).
        NOTE: manual smoke (status item + hotkeys + permission alert) pending user run.
-- [ ] T2 — Color Picker: overlay window with magnifier lens, 1×1 pixel sampling,
+- [x] T2 — Color Picker: overlay window with magnifier lens, 1×1 pixel sampling,
        click → copy HEX to NSPasteboard. Route: delegated writer.
        Check: `swift build` + manual hotkey run (needs Screen Recording grant).
+       DONE 2026-10-13 commit 5bed71e. Build green (spot-checked). Assess: medium,
+       under_budget. Manual smoke pending (Esc needs overlay key status; writer
+       noted). Uses deprecated CGDisplayCreateImage — ponytail-marked, SCK upgrade
+       path.
 - [ ] T3 — Text Extractor: region-select overlay over screen capture, Vision
        `VNRecognizeTextRequest` on selection, text → clipboard; word-click mode.
        Route: delegated writer. Check: `swift build` + manual run.
@@ -77,3 +81,6 @@ branch/PR strategy decided only if a remote appears).
   Toolchain verified: Swift 6.4 / CommandLineTools / SDK 27.0.
 - 2026-10-13: T1 done (183adb3, delegated writer, build verified, RDD assess
   medium/under_budget). Slice 9e077c4..183adb3 = 310 lines. Next: T2.
+- 2026-10-13: T2 done (5bed71e, delegated writer, build verified + clean rebuild).
+  Assess medium/under_budget (provider owns budget math; 700 diff lines, due=false).
+  Slice continues 9e077c4... Next: T3.

@@ -5,7 +5,7 @@ utilities from [microsoft/PowerToys](https://github.com/microsoft/PowerToys) por
 to the Mac behind global hotkeys.
 
 - **Color Picker** — zoom lens → click → copy HEX.
-- **Text Extractor** — select a screen region → OCR → clipboard.
+- **Text Extractor** — drag a region or click a word → OCR → clipboard.
 - **Advanced Paste** — deterministic clipboard transforms (plain text, OCR, files,
   CSV/XML→JSON, HTML→Markdown) behind ⌃⇧V.
 
@@ -14,7 +14,7 @@ to the Mac behind global hotkeys.
 | Module         | Hotkey | T1 (skeleton)       | T2 (Color Picker) | T3 (Text Extractor) | T4 (Advanced Paste) |
 | -------------- | ------ | ------------------- | ----------------- | ------------------- | ------------------- |
 | Color Picker   | ⌃⇧C    | ✅ wired (stub)     | ✅ lens → HEX copy  | —                   | —                   |
-| Text Extractor | ⌃⇧O    | ✅ wired (stub)     | —                 | ⬜ region OCR        | —                   |
+| Text Extractor | ⌃⇧O    | ✅ wired (stub)     | —                 | ✅ region + word OCR | —                   |
 | Advanced Paste | ⌃⇧V    | ✅ wired (stub)     | —                 | —                   | ⬜ transforms + tests |
 
 - ✅ = done · ⬜ = planned · — = not applicable
@@ -24,8 +24,16 @@ permission preflight, and module stubs. T2 delivers the Color Picker: **⌃⇧C*
 opens a magnified lens that follows the cursor; left-click copies the pixel
 under the cursor as `#RRGGBB` to the clipboard, Esc or right-click cancels
 (re-pressing the hotkey also cancels). It needs the **Screen Recording**
-permission — without it, one alert explains where to grant it. The remaining
-hotkeys still log `...: not implemented yet (Tn)`.
+permission — without it, one alert explains where to grant it.
+
+T3 delivers the Text Extractor: **⌃⇧O** captures the main display once and
+shows it dimmed behind an overlay. Drag a rectangle to OCR that region into
+the clipboard (small crops are upscaled ×1.5 first, like PowerOCR); a plain
+click instead copies just the word under the cursor — the full screen is OCR'd
+once and cached, so later clicks are instant. Esc or right-click cancels
+(re-pressing the hotkey also cancels). It needs the same **Screen Recording**
+permission as the Color Picker. Only Advanced Paste still logs
+`AdvancedPaste: not implemented yet (T4)`.
 
 ## Build & run
 
@@ -82,4 +90,5 @@ Sources/MacPowerToys/
   Permissions.swift       Screen Recording / Accessibility preflight
   Modules/                one module entry per feature
   ColorPicker/            Color Picker overlay (session + lens view)
+  TextExtractor/          Text Extractor overlay (session + selection + OCR)
 ```

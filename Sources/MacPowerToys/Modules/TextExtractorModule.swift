@@ -1,6 +1,14 @@
-/// Text Extractor — T3 fills in region capture + Vision OCR; T1 only proves the wiring.
+/// Text Extractor — ⌃⇧O / menu → dimmed screen overlay; drag OCRs the region,
+/// a plain click copies the word under the cursor.
 enum TextExtractorModule {
     static func trigger() {
-        print("TextExtractor: not implemented yet (T3)")
+        // Carbon hotkey callbacks are not main-actor isolated; hop before AppKit.
+        Task { @MainActor in
+            if let active = TextExtractorSession.current {
+                active.finish() // re-trigger while active cancels; never stacks
+            } else {
+                TextExtractorSession.start()
+            }
+        }
     }
 }
