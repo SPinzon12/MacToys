@@ -36,10 +36,11 @@ once and cached, so later clicks are instant. Esc or right-click cancels
 (re-pressing the hotkey also cancels). It needs the same **Screen Recording**
 permission as the Color Picker.
 
-T4 delivers Advanced Paste: **⌃⇧V** reads the clipboard and pops a menu at the
-cursor listing only the transforms valid for the current content. Choosing one
+T4 delivers Advanced Paste: **⌃⇧V** reads the clipboard and pops a glass panel at
+the cursor listing only the transforms valid for the current content, grouped
+into Text / Files / Media with a clipboard preview chip. Choosing one
 transforms the clipboard, writes the result back, and synthesizes a **⌘V** into
-the app that had focus before the menu opened. The transform list:
+the app that had focus before the panel opened. The transform list:
 
 - **Plain Text** — from text or HTML (tags stripped, entities decoded).
 - **Image to Text (OCR)** — Vision OCR of a clipboard image.
@@ -60,6 +61,25 @@ auto-paste is skipped and one alert explains where to grant the permission.
 Unit tests cover the pure transforms (CSV/XML → JSON, HTML → Markdown, plain
 text, menu validity) with `swift test`; OCR, transcoding, and paste synthesis
 are environment-bound and covered by manual use.
+
+## Design
+
+One small glass idiom across the app: translucent `ultraThinMaterial` surfaces,
+hairline borders, a lit rim highlight, continuous rounded corners, quiet
+typography and a single accent color. Tokens live in
+`Sources/MacPowerToys/UI/Theme.swift`; the ⌃⇧V Advanced Paste panel is SwiftUI
+(hover, grouping, keyboard navigation, clipboard preview chip) while the two
+screen overlays stay AppKit and paint the same language (rounded accent
+selection + size chip, glass lens card with grid and swatch, bottom-center hint
+pills).
+
+The idiom is inspired by a reference macOS menu-bar app; the tokens are
+self-authored — that project is GPL and no code was copied from it.
+
+Toolchain note: this CommandLineTools-only environment ships **no
+`SwiftUIMacros` plugin**, so SwiftUI macros (`@State`, `@Observable`,
+`#Preview`, `@FocusState`) do not compile here. UI state lives in
+`ObservableObject` models instead, which are plain Swift and need no plugin.
 
 ## Build & run
 
@@ -115,6 +135,7 @@ Sources/MacPowerToys/
   HotKeys.swift           Carbon global hotkeys
   Permissions.swift       Screen Recording / Accessibility preflight
   Modules/                one module entry per feature
+  UI/                     design tokens + SwiftUI Advanced Paste panel
   ColorPicker/            Color Picker overlay (session + lens view)
   TextExtractor/          Text Extractor overlay (session + selection + OCR)
   AdvancedPaste/          transform menu + pure transforms (tested) + ⌘V paste

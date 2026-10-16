@@ -72,8 +72,19 @@ final class LensView: NSView {
         origin.y = min(max(origin.y, bounds.minY), bounds.maxY - lensHeight)
 
         let lensRect = CGRect(x: origin.x, y: origin.y, width: lensWidth, height: lensHeight)
-        NSColor.black.withAlphaComponent(0.72).setFill()
-        NSBezierPath(roundedRect: lensRect, xRadius: 8, yRadius: 8).fill()
+        let card = NSBezierPath(roundedRect: lensRect, xRadius: 10, yRadius: 10)
+        NSGraphicsContext.saveGraphicsState()
+        let shadow = NSShadow()
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.45)
+        shadow.shadowBlurRadius = 14
+        shadow.shadowOffset = NSSize(width: 0, height: -4)
+        shadow.set()
+        NSColor.black.withAlphaComponent(0.74).setFill()
+        card.fill()
+        NSGraphicsContext.restoreGraphicsState()
+        NSColor.white.withAlphaComponent(0.14).setStroke()
+        card.lineWidth = 0.5
+        card.stroke()
 
         let imageRect = CGRect(
             x: origin.x + pad,
@@ -87,6 +98,26 @@ final class LensView: NSView {
         context.draw(lensImage, in: imageRect)
         NSColor.white.withAlphaComponent(0.35).setStroke()
         NSBezierPath(rect: imageRect).stroke()
+
+        // Faint per-pixel grid: makes the sample granularity visible.
+        if pixelPoints > 1 {
+            NSColor.white.withAlphaComponent(0.10).setStroke()
+            let grid = NSBezierPath()
+            var gx = imageRect.minX + pixelPoints
+            while gx < imageRect.maxX - 0.5 {
+                grid.move(to: CGPoint(x: gx, y: imageRect.minY))
+                grid.line(to: CGPoint(x: gx, y: imageRect.maxY))
+                gx += pixelPoints
+            }
+            var gy = imageRect.minY + pixelPoints
+            while gy < imageRect.maxY - 0.5 {
+                grid.move(to: CGPoint(x: imageRect.minX, y: gy))
+                grid.line(to: CGPoint(x: imageRect.maxX, y: gy))
+                gy += pixelPoints
+            }
+            grid.lineWidth = 0.5
+            grid.stroke()
+        }
 
         // Crosshair centered on the sampled pixel: dark outline under a light
         // core, so it reads on both dark and bright lens content.
@@ -109,12 +140,14 @@ final class LensView: NSView {
         // Swatch + HEX readout under the lens image.
         let rowY = origin.y + pad
         let swatchRect = CGRect(x: origin.x + pad, y: rowY, width: swatchSide, height: swatchSide)
+        let swatch = NSBezierPath(roundedRect: swatchRect, xRadius: 5, yRadius: 5)
         color.setFill()
-        NSBezierPath(rect: swatchRect).fill()
-        NSColor.white.withAlphaComponent(0.4).setStroke()
-        NSBezierPath(rect: swatchRect).stroke()
+        swatch.fill()
+        NSColor.white.withAlphaComponent(0.45).setStroke()
+        swatch.lineWidth = 0.5
+        swatch.stroke()
 
-        let font = NSFont.monospacedSystemFont(ofSize: 15, weight: .semibold)
+        let font = NSFont.monospacedDigitSystemFont(ofSize: 16, weight: .semibold)
         let attributes: [NSAttributedString.Key: Any] = [
             .font: font,
             .foregroundColor: NSColor.white
@@ -124,6 +157,50 @@ final class LensView: NSView {
         let textY = rowY + (swatchSide - textHeight) / 2
         (hex as NSString).draw(
             at: CGPoint(x: swatchRect.maxX + 8, y: textY),
+            withAttributes: attributes
+        )
+
+        drawHint()
+    }
+
+    /// Bottom-center hint. The lens follows the cursor, so a fixed hint never
+    /// fights the magnifier for space.
+    private func drawHint() {
+        let text = "click to copy · esc" as NSString
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 13, weight: .medium),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.95)
+        ]
+        let textSize = text.size(withAttributes: attributes)
+        let symbolSide: CGFloat = 15
+        let gap: CGFloat = 7
+        let padding: CGFloat = 14
+        let pillHeight = max(textSize.height + 14, 30)
+        let contentWidth = symbolSide + gap + textSize.width
+        let pill = CGRect(
+            x: (bounds.width - (contentWidth + padding * 2)) / 2,
+            y: bounds.minY + 40,
+            width: contentWidth + padding * 2,
+            height: pillHeight
+        )
+
+        NSColor.black.withAlphaComponent(0.62).setFill()
+        NSBezierPath(roundedRect: pill, xRadius: pillHeight / 2, yRadius: pillHeight / 2).fill()
+        NSColor.white.withAlphaComponent(0.14).setStroke()
+        let border = NSBezierPath(roundedRect: pill, xRadius: pillHeight / 2, yRadius: pillHeight / 2)
+        border.lineWidth = 0.5
+        border.stroke()
+
+        if let symbol = RegionSelectionView.tintedSymbol("eyedropper", side: symbolSide) {
+            symbol.draw(in: CGRect(
+                x: pill.minX + padding,
+                y: pill.midY - symbolSide / 2,
+                width: symbolSide,
+                height: symbolSide
+            ))
+        }
+        text.draw(
+            at: CGPoint(x: pill.minX + padding + symbolSide + gap, y: pill.midY - textSize.height / 2),
             withAttributes: attributes
         )
     }
