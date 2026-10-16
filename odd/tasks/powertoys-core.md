@@ -72,6 +72,21 @@ item, Carbon `RegisterEventHotKey` for globals, one coordinator + one module per
        on CLT toolchain). Audio ships as .m4a (documented swap). Assess medium/
        under_budget. ⌘V synthesis + menu smoke pending user run.
 
+- [ ] T5 — Design pass (presentation only). SwiftUI panel for Advanced Paste
+       (replaces the bare NSMenu), polished Text Extractor + Color Picker overlays,
+       SF Symbols in the status menu. Reference language: vorssaint-utils
+       (`UI/Theme.swift`: base/card/control fills, hairline borders, rim highlight,
+       semantic light/dark colors). Route: delegated writer. Check: `swift build`,
+       `swift test` (42 tests must stay green — logic untouched).
+
+## Design constraints (T5, verified by parent)
+- SwiftUI is available, but the CLT-only toolchain ships NO `SwiftUIMacros` plugin:
+  `@State` / `@Observable` / `#Preview` do not compile (`libSwiftUIMacros.dylib`
+  absent; probe failed under both swiftc and SPM). `@ObservedObject`, `@Published`,
+  `@Environment`, `@StateObject` are plain property wrappers/types and DO compile
+  (probe green). Hold mutable UI state in `ObservableObject` models.
+- Overlays keep their existing AppKit interaction logic; only their drawing changes.
+
 ## Test policy
 Skeleton/overlay/hotkey code: no meaningful deterministic RED → structural checks
 (`swift build`) + manual smoke. Transform engine functions: unit tests first (RED→GREEN).
@@ -97,3 +112,7 @@ branch/PR strategy decided only if a remote appears).
   observed). Assess medium/under_budget (2703 diff lines, due=false — provider
   owns budget math). ALL v1 TASKS COMPLETE. Remaining: user manual smoke on real
   Mac (permissions, hotkeys, OCR, paste synthesis).
+- 2026-10-13: user asked for a design pass ("no tan xd") with reference
+  github.com/vorssaint/vorssaint-utils → added T5. Cloned the reference locally;
+  extracted its visual language. Probed SwiftUI on this toolchain: compiles without
+  macros, fails on `@State` (no SwiftUIMacros plugin in CLT). T5 spec written.
