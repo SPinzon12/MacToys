@@ -72,12 +72,18 @@ item, Carbon `RegisterEventHotKey` for globals, one coordinator + one module per
        on CLT toolchain). Audio ships as .m4a (documented swap). Assess medium/
        under_budget. ⌘V synthesis + menu smoke pending user run.
 
-- [ ] T5 — Design pass (presentation only). SwiftUI panel for Advanced Paste
+- [x] T5 — Design pass (presentation only). SwiftUI panel for Advanced Paste
        (replaces the bare NSMenu), polished Text Extractor + Color Picker overlays,
        SF Symbols in the status menu. Reference language: vorssaint-utils
        (`UI/Theme.swift`: base/card/control fills, hairline borders, rim highlight,
        semantic light/dark colors). Route: delegated writer. Check: `swift build`,
        `swift test` (42 tests must stay green — logic untouched).
+       DONE 2026-10-13 — but executed INLINE by the parent, not the delegated
+       writer: all subagent delegations were down (see progress log). Commits
+       f2661a5 (Theme tokens + glass SwiftUI panel + status-menu symbols) and
+       14fd259 (overlay chrome: rounded accent selection + size chip, lens card
+       with grid/swatch/shadow, glass hint pills, README Design section).
+       Build green, 42 tests green. Visual smoke pending user run.
 
 ## Design constraints (T5, verified by parent)
 - SwiftUI is available, but the CLT-only toolchain ships NO `SwiftUIMacros` plugin:
@@ -116,3 +122,10 @@ branch/PR strategy decided only if a remote appears).
   github.com/vorssaint/vorssaint-utils → added T5. Cloned the reference locally;
   extracted its visual language. Probed SwiftUI on this toolchain: compiles without
   macros, fails on `@State` (no SwiftUIMacros plugin in CLT). T5 spec written.
+- 2026-10-13: T5 executed INLINE (delegation outage). Root cause: subagents pinned
+  to `opencode-go/mimo-v2.6-flash`, which the provider now answers with
+  `model_coming_soon`; the ID `opencode-go/deepseek-v4-flash` does NOT exist.
+  Fixed `explore`/`general`/`gentle-ai-worker` → `opencode-go/deepseek-v4.1-flash`
+  in `~/.config/opencode/opencode.json` (backup kept). Needs a session restart to
+  apply. Still on the dead model: `gentle-orchestrator` + the 6 `review-*` agents.
+  Result: T5 done inline, commits f2661a5 + 14fd259, build + 42 tests green.
