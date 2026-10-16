@@ -4,7 +4,7 @@ enum AdvancedPasteModule {
     static func trigger() {
         // Carbon hotkey callbacks are not main-actor isolated; hop before AppKit.
         Task { @MainActor in
-            PasteCoordinator.shared.showMenu()
+            await PasteCoordinator.shared.showMenu()
         }
     }
 }

@@ -7,16 +7,11 @@ import AppKit
 final class PasteCoordinator: NSObject {
     static let shared = PasteCoordinator()
 
-    /// The 1×1 panel that anchors the menu under the cursor.
-    private var panel: NSWindow?
-    /// Set by the menu action while the menu is tracking.
-    private var chosen: PasteTransform?
-
     private override init() {
         super.init()
     }
 
-    func showMenu() {
+    func showMenu() async {
         let content = readClipboard()
         let transforms = PasteTransform.available(for: content)
         guard !transforms.isEmpty else {
@@ -26,64 +21,32 @@ final class PasteCoordinator: NSObject {
             )
             return
         }
-        // The menu activates us; ⌘V must land back in the app that had focus.
+        // The panel activates us; ⌘V must land back in the app that had focus.
         let previousApp = NSWorkspace.shared.frontmostApplication
 
-        chosen = nil
-        let menu = buildMenu(transforms)
-        popup(menu: menu)
-
-        guard let transform = chosen else {
-            previousApp?.activate() // dismissed without a pick: give focus back
-            return
-        }
-        previousApp?.activate()
-        Task { await execute(transform, content: content) }
-    }
-
-    // MARK: - Menu
-
-    private func buildMenu(_ transforms: [PasteTransform]) -> NSMenu {
-        let menu = NSMenu()
-        menu.autoenablesItems = false // items carry target/action already
-        for transform in transforms {
-            let item = NSMenuItem(
-                title: transform.title,
-                action: #selector(transformChosen(_:)),
-                keyEquivalent: ""
-            )
-            item.target = self
-            item.representedObject = transform.rawValue
-            menu.addItem(item)
-        }
-        return menu
-    }
-
-    /// Accessory apps have no window to anchor a menu in, so a 1×1 borderless
-    /// panel at the cursor becomes that anchor. `popUp` runs a tracking loop
-    /// and returns once the menu is dismissed (item chosen or not).
-    private func popup(menu: NSMenu) {
-        let mouse = NSEvent.mouseLocation // AppKit global, y-up
-        let panel = NSWindow(
-            contentRect: NSRect(x: mouse.x, y: mouse.y, width: 1, height: 1),
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
+        let picked = await PastePanelController.shared.present(
+            rows: transforms.map { PasteRowModel($0) },
+            preview: preview(for: content)
         )
-        panel.isReleasedWhenClosed = false
-        panel.level = .statusBar // above normal windows so the menu shows
-        self.panel = panel
+        previousApp?.activate() // give focus back, picked or dismissed
 
-        NSApp.activate() // brief activation so the menu can take keys
-        panel.makeKeyAndOrderFront(nil)
-        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: 1), in: panel.contentView!)
-
-        panel.orderOut(nil)
-        self.panel = nil
+        guard let transform = picked else { return } // dismissed without a pick
+        await execute(transform, content: content)
     }
 
-    @objc private func transformChosen(_ sender: NSMenuItem) {
-        chosen = (sender.representedObject as? String).flatMap(PasteTransform.init(rawValue:))
+    /// One-line clipboard summary for the panel's header chip.
+    private func preview(for content: ClipboardContent) -> String {
+        if let text = content.text, !text.isEmpty {
+            let collapsed = text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+            return collapsed.count > 60 ? String(collapsed.prefix(60)) + "…" : collapsed
+        }
+        if let image = content.image { return "Image \(image.width)×\(image.height)" }
+        if let file = content.fileURLs.first {
+            let extra = content.fileURLs.count > 1 ? " +\(content.fileURLs.count - 1)" : ""
+            return file.lastPathComponent + extra
+        }
+        if content.hasHTML { return "HTML" }
+        return "Empty"
     }
 
     // MARK: - Execution
