@@ -41,7 +41,13 @@ enum Theme {
         static let l: CGFloat = 12
     }
 
-    static let accent = Color.accentColor
+    /// MacToys' own accent — the indigo-violet of the toy-blocks icon — instead of
+    /// the system accent: with a red system accent every highlight read as an
+    /// error (a "red screen" in the Permissions window).
+    static let accentNS = NSColor(srgbRed: 0.47, green: 0.36, blue: 0.97, alpha: 1)
+    static let accent = Color(nsColor: accentNS)
+    /// Needs attention (a missing permission) — never red, which means failure.
+    static let attention = Color.orange
 
     // MARK: - Surfaces
 

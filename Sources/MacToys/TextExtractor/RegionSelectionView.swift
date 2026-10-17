@@ -106,8 +106,8 @@ final class RegionSelectionView: NSView {
         glowLayer.frame = bounds
         glowLayer.fillColor = nil
         glowLayer.lineWidth = 2
-        glowLayer.strokeColor = NSColor.controlAccentColor.withAlphaComponent(0.6).cgColor
-        glowLayer.shadowColor = NSColor.controlAccentColor.cgColor
+        glowLayer.strokeColor = Theme.accentNS.withAlphaComponent(0.6).cgColor
+        glowLayer.shadowColor = Theme.accentNS.cgColor
         glowLayer.shadowOpacity = 0.75
         glowLayer.shadowRadius = 7
         glowLayer.shadowOffset = .zero
@@ -123,11 +123,11 @@ final class RegionSelectionView: NSView {
         borderLayer.frame = bounds
         borderLayer.fillColor = nil
         borderLayer.lineWidth = 1.5
-        borderLayer.strokeColor = NSColor.controlAccentColor.cgColor
+        borderLayer.strokeColor = Theme.accentNS.cgColor
 
         handlesLayer.frame = bounds
         handlesLayer.fillColor = NSColor.white.cgColor
-        handlesLayer.strokeColor = NSColor.controlAccentColor.cgColor
+        handlesLayer.strokeColor = Theme.accentNS.cgColor
         handlesLayer.lineWidth = 1.5
         handlesLayer.shadowColor = NSColor.black.cgColor
         handlesLayer.shadowOpacity = 0.45

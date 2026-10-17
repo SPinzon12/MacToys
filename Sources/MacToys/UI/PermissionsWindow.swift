@@ -41,7 +41,7 @@ struct PermissionsView: View {
             Image(systemName: model.status.allGranted ? "checkmark.shield.fill" : "lock.shield")
                 .font(.system(size: 30, weight: .regular))
                 .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(model.status.allGranted ? Color.green : Theme.accent)
+                .foregroundStyle(model.status.allGranted ? Color.green : Theme.attention)
                 .frame(width: 36)
             VStack(alignment: .leading, spacing: 4) {
                 Text(model.status.allGranted ? "MacToys is ready" : "MacToys needs two permissions")
@@ -86,6 +86,7 @@ struct PermissionsView: View {
             } else {
                 Button("Grant…") { onRequest(permission) }
                     .buttonStyle(.borderedProminent)
+                    .tint(Theme.accent) // brand, not the system accent (red reads as an error)
                     .controlSize(.regular)
             }
         }
