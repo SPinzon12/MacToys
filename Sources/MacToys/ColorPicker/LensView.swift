@@ -57,7 +57,12 @@ final class LensView: NSView {
         let pad: CGFloat = 7
         let gap: CGFloat = 9
         let swatchSide: CGFloat = 34
-        let lensWidth = imageSize + pad * 2
+        // The readout row can be wider than the magnified image (Retina: 100 pt
+        // image vs ~160 pt of swatch + "rgb(255, 255, 255)"), so the card takes
+        // the wider of the two and centers the image.
+        let readoutWidth = swatchSide + Self.textGap + Self.widestReadoutText
+        let contentWidth = max(imageSize, readoutWidth)
+        let lensWidth = contentWidth + pad * 2
         let lensHeight = pad + imageSize + gap + swatchSide + pad
 
         // Anchor up-right of the cursor; flip to the other side at the desktop
@@ -91,8 +96,10 @@ final class LensView: NSView {
         card.lineWidth = 0.5
         card.stroke()
 
+        // Centered, then snapped to a device pixel like the origin above.
+        let imageInset = (((contentWidth - imageSize) / 2) * scale).rounded() / scale
         let imageRect = CGRect(
-            x: origin.x + pad,
+            x: origin.x + pad + imageInset,
             y: origin.y + lensHeight - pad - imageSize,
             width: imageSize,
             height: imageSize
@@ -132,6 +139,19 @@ final class LensView: NSView {
 
     private static let cardRadius: CGFloat = 12
     private static let imageRadius: CGFloat = 7
+
+    private static let hexFont = NSFont.monospacedDigitSystemFont(ofSize: 15, weight: .semibold)
+    private static let rgbFont = NSFont.monospacedSystemFont(ofSize: 10.5, weight: .medium)
+    /// Space between the swatch and the text column.
+    private static let textGap: CGFloat = 9
+
+    /// Width of the widest possible readout line, measured once: sizing to the
+    /// worst case keeps the card from resizing as the color under the cursor changes.
+    private static let widestReadoutText: CGFloat = {
+        let hex = ("#FFFFFF" as NSString).size(withAttributes: [.font: hexFont]).width
+        let rgb = ("rgb(255, 255, 255)" as NSString).size(withAttributes: [.font: rgbFont]).width
+        return max(hex, rgb).rounded(.up)
+    }()
 
     /// Per-pixel grid, one physical pixel wide and centered on a physical pixel
     /// so it renders hard instead of as a two-pixel blur. A dark line under a
@@ -212,9 +232,9 @@ final class LensView: NSView {
         NSColor.white.withAlphaComponent(0.5).setStroke()
         swatchBorder.stroke()
 
-        let hexFont = NSFont.monospacedDigitSystemFont(ofSize: 15, weight: .semibold)
-        let rgbFont = NSFont.monospacedSystemFont(ofSize: 10.5, weight: .medium)
-        let textX = swatchRect.maxX + 9
+        let hexFont = Self.hexFont
+        let rgbFont = Self.rgbFont
+        let textX = swatchRect.maxX + Self.textGap
         // NSFont has no lineHeight on AppKit; ascender − descender is close enough.
         let hexHeight = hexFont.ascender - hexFont.descender
         let rgbHeight = rgbFont.ascender - rgbFont.descender
