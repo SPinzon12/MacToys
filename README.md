@@ -236,3 +236,8 @@ Run the tests with:
 ```sh
 swift test
 ```
+
+## License
+
+[MIT](LICENSE) — a personal project; use it, change it, share it. Ported modules
+keep their upstream notice in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -25,7 +25,7 @@ Branch: `main` (repo convention, no remote yet). Delivery: ask-on-risk. Test run
   Releases, CI that builds the release artifacts.
 - Assumptions (parent defaults): bundle id `dev.spinzon12.MacPowerToys` (overridable
   with `BUNDLE_ID`), app name "Mac PowerToys", first version 0.1.0.
-- Open decision: project license (needed before any public release).
+- License: MIT, copyright "spinzon12" (decided 2026-10-16, see Log).
 
 ## Tasks
 - [x] D1 — S2 app bundle script `scripts/build-app.sh` + `VERSION` + `Info.plist`
@@ -60,3 +60,6 @@ Branch: `main` (repo convention, no remote yet). Delivery: ask-on-risk. Test run
 - 2026-10-16: D1–D5 done inline (units < 100 lines each, sequential). Risk: item 5
   (release/installer scripts). Pending: verifier, native review, user smoke of the
   bundled app, license decision, D6 (Developer ID), D7 (publish).
+- 2026-10-16 user, verbatim: "dale, pues es un proyecto personal y si alguien lo quiere
+  usar adelante" → MIT (the recommended option). LICENSE + README section, LICENSE
+  copied into the bundle.
