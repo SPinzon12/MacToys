@@ -16,7 +16,9 @@ enum OCRService {
     /// Runs one throwaway `.accurate` pass at launch, so that one-time
     /// preparation (or the per-launch model load) happens before the hotkey.
     static func warmUp() {
-        Task.detached(priority: .utility) {
+        // Same priority as an extraction: a hotkey press during warm-up queues
+        // behind this pass in Vision, so a low priority would invert.
+        Task.detached(priority: .userInitiated) {
             guard let image = warmUpImage() else { return }
             _ = try? recognize(image)
         }
