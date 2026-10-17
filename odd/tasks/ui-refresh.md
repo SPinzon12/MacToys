@@ -74,3 +74,14 @@ work checked with real-window screenshots (no UI test runner on this toolchain).
   (≈ CSS name, HEX/RGB/HSL rows, 10 recent colors, Pick Again ⌘P). Old custom lens
   removed. 101 tests (7 new). Sampler exercised for real (shown, Esc → nil); card
   screenshot-checked.
+- 2026-10-17 user (verbatim): "soy yo o en permisos me estan saliendo 2 ventanas. me
+  gusta la card pero la lupa la veo rara miremos alternativas como es la de power toys
+  o el repo que te mostre antes" → 2 windows = macOS's own prompt + our Settings pane
+  opened together; now the first Grant only prompts, later clicks open Settings
+  (9d1dff0). Reviewed PowerToys (chip beside the cursor, wheel zoom) and vorssaint
+  (offset square loupe + readout bar, wheel zoom); user chose "Estilo PowerToys
+  (Recommended)". Done 1fb5693: chip + scroll-to-zoom magnifier (PickerZoom, 3 tests),
+  same result card; Screen Recording needed again. Overlay is a non-activating key
+  panel (measured: plain window stayed non-key while MacToys was inactive).
+  Unverified: real click/scroll delivery — synthetic CGEvents from this harness do not
+  reach even an opaque control window, so only a manual run can confirm.
