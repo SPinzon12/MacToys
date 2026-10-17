@@ -20,3 +20,34 @@ struct ExtractionGateTests {
         #expect(ticket.verdict(latestID: 3, currentChangeCount: 42) == .clipboardChanged)
     }
 }
+
+/// What a finished extraction does with its OCR result, per verdict.
+struct ExtractionOutcomeTests {
+    private let messages = (confirmation: "Copied 5 chars", miss: "No text found")
+
+    private func outcome(_ verdict: ExtractionTicket.Verdict, _ text: String?) -> ExtractionOutcome {
+        ExtractionOutcome.decide(verdict: verdict, text: text, confirmation: messages.confirmation, missMessage: messages.miss)
+    }
+
+    @Test func deliverCopiesTextWithConfirmation() {
+        #expect(outcome(.deliver, "hello") == .copy("hello", toast: "Copied 5 chars"))
+    }
+
+    @Test func deliverWithNothingRecognizedShowsMiss() {
+        #expect(outcome(.deliver, nil) == .miss("No text found"))
+    }
+
+    @Test func supersededDoesNothingEvenWhenEmpty() {
+        #expect(outcome(.superseded, "hello") == .nothing)
+        #expect(outcome(.superseded, nil) == .nothing)
+    }
+
+    @Test func clipboardChangedKeepsUserCopy() {
+        #expect(outcome(.clipboardChanged, "hello") == .keptNewerCopy)
+    }
+
+    @Test func clipboardChangedWithNothingRecognizedShowsMissInstead() {
+        // "Kept your newer copy" would be misleading when there was nothing to write.
+        #expect(outcome(.clipboardChanged, nil) == .miss("No text found"))
+    }
+}

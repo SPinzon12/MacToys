@@ -172,19 +172,18 @@ final class TextExtractorSession: NSObject {
     private static func deliver(_ text: String?, ticket: ExtractionTicket, confirmation: String, missMessage: String) {
         let pasteboard = NSPasteboard.general
         let verdict = ticket.verdict(latestID: latestTicketID, currentChangeCount: pasteboard.changeCount)
-        guard verdict != .superseded else { return } // the newer extraction shows its own toasts
-        guard let text else {
-            Toast.show(missMessage, leading: .symbol("text.viewfinder"))
-            return
-        }
-        guard verdict == .deliver else {
-            // .clipboardChanged — also replaces a "Recognizing text…" pill that would linger.
+        switch ExtractionOutcome.decide(verdict: verdict, text: text, confirmation: confirmation, missMessage: missMessage) {
+        case .nothing:
+            break
+        case .miss(let message):
+            Toast.show(message, leading: .symbol("text.viewfinder"))
+        case .keptNewerCopy:
             Toast.show("Kept your newer copy", leading: .symbol("doc.on.clipboard"))
-            return
+        case .copy(let text, let toast):
+            pasteboard.clearContents()
+            _ = pasteboard.setString(text, forType: .string)
+            Toast.show(toast, leading: .symbol("text.viewfinder"))
         }
-        pasteboard.clearContents()
-        _ = pasteboard.setString(text, forType: .string)
-        Toast.show(confirmation, leading: .symbol("text.viewfinder"))
     }
 
     /// View rect (y-up, origin bottom-left) → image pixels (y-down, origin top-left).
