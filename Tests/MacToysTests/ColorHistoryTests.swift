@@ -56,4 +56,16 @@ struct ColorHistoryTests {
         #expect(blue.string(in: .rgb) == "rgb(30, 144, 255)")
         #expect(blue.string(in: .hsl) == "hsl(210, 100%, 56%)")
     }
+
+    @Test func readableTextOnTheColorItself() {
+        // PowerToys-style chip: the chip is the color, so the code switches between
+        // dark and light text by relative luminance.
+        #expect(PickedColor(r: 255, g: 255, b: 255).prefersDarkText)
+        #expect(PickedColor(r: 255, g: 210, b: 60).prefersDarkText)   // yellow
+        #expect(PickedColor(r: 46, g: 204, b: 113).prefersDarkText)   // light green
+        #expect(!PickedColor(r: 0, g: 0, b: 0).prefersDarkText)
+        #expect(!PickedColor(r: 30, g: 60, b: 200).prefersDarkText)   // deep blue
+        #expect(!PickedColor(r: 40, g: 44, b: 52).prefersDarkText)    // editor dark gray
+    }
 }
+

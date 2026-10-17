@@ -63,7 +63,8 @@ All four tasks are done.
 
 T1 delivers the skeleton: menu-bar status item, global hotkey registration,
 permission preflight, and module stubs. T2 delivers the Color Picker, PowerToys-style: **⌃⇧C** leaves the cursor as it is
-and floats a small chip beside it with the color under it and its code, live.
+and floats a small chip beside it — filled with the color under it, like
+PowerToys, with its code in black or white, whichever contrasts more — live.
 **Scroll up** to grow a magnifier above the chip (4× → 16×, with a pixel grid and
 the cursor's pixel outlined); scroll back down to hide it. **Click** (or ⏎) copies
 the color in your default format and opens a glass card next to the pointer with

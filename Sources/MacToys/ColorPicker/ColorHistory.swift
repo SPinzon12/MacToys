@@ -27,6 +27,17 @@ struct PickedColor: Equatable, Hashable {
 
     func string(in format: ColorFormat) -> String { format.string(r: r, g: g, b: b) }
 
+    /// Dark text reads better on this color than white does (WCAG contrast:
+    /// black wins when relative luminance is above ~0.179).
+    var prefersDarkText: Bool {
+        func linear(_ component: UInt8) -> Double {
+            let value = Double(component) / 255
+            return value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        let luminance = 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b)
+        return (luminance + 0.05) / 0.05 > 1.05 / (luminance + 0.05)
+    }
+
     var nsColor: NSColor {
         NSColor(srgbRed: CGFloat(r) / 255, green: CGFloat(g) / 255, blue: CGFloat(b) / 255, alpha: 1)
     }

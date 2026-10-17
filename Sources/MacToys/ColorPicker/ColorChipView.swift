@@ -61,7 +61,6 @@ final class ColorChipView: NSView {
     static let loupePoints: CGFloat = 132
     private static let pad: CGFloat = 8
     private static let chipHeight: CGFloat = 34
-    private static let swatchSide: CGFloat = 22
     private static let valueFont = NSFont.monospacedSystemFont(ofSize: 13, weight: .semibold)
 
     override func draw(_ dirtyRect: NSRect) {
@@ -72,14 +71,16 @@ final class ColorChipView: NSView {
         dirtyRect.fill()
 
         let value = color.string(in: ColorFormat.saved) as NSString
-        let valueWidth = value.size(withAttributes: [.font: Self.valueFont]).width.rounded(.up)
-        let chipWidth = Self.pad + Self.swatchSide + 9 + valueWidth + 12
+        let valueSize = value.size(withAttributes: [.font: Self.valueFont])
+        let chipWidth = (valueSize.width + 28).rounded(.up)
         let hasLoupe = loupe != nil
         let width = hasLoupe ? max(chipWidth, Self.loupePoints + Self.pad * 2) : chipWidth
         let height = Self.chipHeight + (hasLoupe ? Self.loupePoints + Self.pad : 0)
         let card = placement(for: CGSize(width: width, height: height))
+        // Text and edges flip between dark and light with the color (PowerToys).
+        let ink = color.prefersDarkText ? NSColor.black : NSColor.white
 
-        // Glass-dark card with a hairline and a soft lift, like the app's other HUDs.
+        // PowerToys' default: the whole chip is the color under the cursor.
         let shape = NSBezierPath(roundedRect: card, xRadius: 12, yRadius: 12)
         NSGraphicsContext.saveGraphicsState()
         let shadow = NSShadow()
@@ -87,11 +88,13 @@ final class ColorChipView: NSView {
         shadow.shadowBlurRadius = 12
         shadow.shadowOffset = NSSize(width: 0, height: -4)
         shadow.set()
-        NSColor(white: 0.11, alpha: 0.9).setFill()
+        color.nsColor.setFill()
         shape.fill()
         NSGraphicsContext.restoreGraphicsState()
-        NSColor.white.withAlphaComponent(0.14).setStroke()
-        shape.lineWidth = 0.5
+        // A hairline in the opposite tone keeps the chip visible on a background
+        // of its own color.
+        ink.withAlphaComponent(0.22).setStroke()
+        shape.lineWidth = 1
         shape.stroke()
 
         if let loupe {
@@ -101,26 +104,16 @@ final class ColorChipView: NSView {
                 width: Self.loupePoints,
                 height: Self.loupePoints
             )
-            drawLoupe(loupe.image, factor: loupe.factor, in: loupeRect)
+            drawLoupe(loupe.image, factor: loupe.factor, in: loupeRect, ink: ink)
         }
 
-        // Chip row: swatch + value in the default format.
-        let swatchRect = CGRect(
-            x: card.minX + Self.pad,
-            y: card.minY + (Self.chipHeight - Self.swatchSide) / 2,
-            width: Self.swatchSide,
-            height: Self.swatchSide
-        )
-        let swatch = NSBezierPath(roundedRect: swatchRect, xRadius: 6, yRadius: 6)
-        color.nsColor.setFill()
-        swatch.fill()
-        swatch.lineWidth = 1
-        NSColor.white.withAlphaComponent(0.3).setStroke()
-        swatch.stroke()
-        let valueSize = value.size(withAttributes: [.font: Self.valueFont])
+        // The code, centered on the color strip.
         value.draw(
-            at: CGPoint(x: swatchRect.maxX + 9, y: swatchRect.midY - valueSize.height / 2),
-            withAttributes: [.font: Self.valueFont, .foregroundColor: NSColor.white]
+            at: CGPoint(
+                x: card.midX - valueSize.width / 2,
+                y: card.minY + (Self.chipHeight - valueSize.height) / 2
+            ),
+            withAttributes: [.font: Self.valueFont, .foregroundColor: ink]
         )
 
         drawHint()
@@ -141,7 +134,7 @@ final class ColorChipView: NSView {
         return CGRect(x: (x * scale).rounded() / scale, y: (y * scale).rounded() / scale, width: size.width, height: size.height)
     }
 
-    private func drawLoupe(_ image: CGImage, factor: Int, in rect: CGRect) {
+    private func drawLoupe(_ image: CGImage, factor: Int, in rect: CGRect, ink: NSColor) {
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         let scale = window?.backingScaleFactor ?? 2
         let pixelPoints = CGFloat(factor) / scale
@@ -172,8 +165,8 @@ final class ColorChipView: NSView {
         context.restoreGState()
 
         let border = NSBezierPath(roundedRect: rect, xRadius: 8, yRadius: 8)
-        border.lineWidth = 0.5
-        NSColor.white.withAlphaComponent(0.25).setStroke()
+        border.lineWidth = 1
+        ink.withAlphaComponent(0.3).setStroke()
         border.stroke()
 
         let zoomLabel = "\(factor)×" as NSString
