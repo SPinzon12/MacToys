@@ -85,3 +85,8 @@ work checked with real-window screenshots (no UI test runner on this toolchain).
   panel (measured: plain window stayed non-key while MacToys was inactive).
   Unverified: real click/scroll delivery — synthetic CGEvents from this harness do not
   reach even an opaque control window, so only a manual run can confirm.
+- 2026-10-17 user (verbatim): "mucho mejor pero el color del fondo que esta en el
+  cursor debe ser el mismo que deberia usar powertoys por defecto en todo como
+  backgroud" → chip filled with the sampled color, black/white text by WCAG contrast
+  (a9a899f). User: "funciona dejemolo asi por el momento push a todo y release" →
+  release v0.3.0. U3 onboarding and U4 Settings stay pending (paused by the user).
