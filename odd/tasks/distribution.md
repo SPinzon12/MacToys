@@ -23,8 +23,13 @@ Branch: `main` (repo convention, no remote yet). Delivery: ask-on-risk. Test run
   the right-click workaround and permissions survive updates.
 - S7 (blocked — needs explicit authorization: no git remote) Public repo, GitHub
   Releases, CI that builds the release artifacts.
-- Assumptions (parent defaults): bundle id `dev.spinzon12.MacPowerToys` (overridable
-  with `BUNDLE_ID`), app name "Mac PowerToys", first version 0.1.0.
+- S8 Rename (user, verbatim): "vamos a llamar la app MacToys organiza el repo para
+  publicar: código fuente y aplicación compilada para descargar." → app MacToys,
+  executable `mactoys`, bundle id `dev.spinzon12.MacToys`, artifacts
+  `MacToys-<version>.dmg/.zip`; history folder migrated MacPowerToys → MacToys.
+  Source in the repo; the compiled app ships as GitHub Release assets (not in git).
+- Assumptions (parent defaults): first version 0.1.0; repo name `SPinzon12/MacToys`
+  (pending user confirmation; earlier authorization was for `mac-powertoys`).
 - License: MIT, copyright "spinzon12" (decided 2026-10-16, see Log).
 
 ## Tasks
@@ -48,7 +53,9 @@ Branch: `main` (repo convention, no remote yet). Delivery: ask-on-risk. Test run
        DONE f75432a: README Install / Build a release, THIRD_PARTY_NOTICES (PowerToys
        MIT text fetched verbatim), notice copied into the bundle.
 - [ ] D6 — S6 blocked (Developer ID).
-- [ ] D7 — S7 blocked (authorization to publish).
+- [ ] D7 — S7/S8 publish: rename done + CI/Release workflows written; pending
+       confirmation of repo `SPinzon12/MacToys`, then create + push + first CI run,
+       then (separate confirmation) tag v0.1.0 release.
 
 ## Log
 - L1 (2026-10-16) "arregla también lo de los tests, y comencemos a organizar para que
@@ -70,3 +77,6 @@ Branch: `main` (repo convention, no remote yet). Delivery: ask-on-risk. Test run
   approval cancellable (mixed state). Release rerun: checksums OK, 69 tests green.
 - 2026-10-16 native review (3990a62..aa5b3b9, high/item 5): user chose "Skip this
   time" → declined for this candidate; independent verifier PASS stands.
+- 2026-10-16: rename to MacToys (72 tests incl. 3 migration tests, RED→GREEN),
+  Package tools 6.0 + conditional CLT testing plugin (both branches checked),
+  .atl untracked, CI + Release workflows (YAML valid; not yet run on GitHub).

@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+    env:
+      # Xcode finds the swift-testing macro plugin by itself (see Package.swift).
+      MACTOYS_SKIP_CLT_TESTING_PLUGIN: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      # The panel uses NSGlassEffectView, which needs the macOS 26 SDK or newer.
+      - name: Select the newest Xcode
+        run: |
+          XCODE="$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+          swift --version
+
+      - name: Build
+        run: swift build
+
+      - name: Test
+        run: swift test
+
+      - name: Build the app bundle
+        run: ARCHS=arm64 scripts/build-app.sh

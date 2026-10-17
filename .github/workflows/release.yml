@@ -1,0 +1,49 @@
+name: Release
+
+# Push a tag like v0.2.0 (matching the VERSION file) to publish a GitHub Release
+# with the universal app as .dmg and .zip plus SHA256SUMS.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    env:
+      MACTOYS_SKIP_CLT_TESTING_PLUGIN: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the build number is the commit count
+
+      - name: Select the newest Xcode
+        run: |
+          XCODE="$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+          sudo xcode-select -s "$XCODE"
+          swift --version
+
+      - name: Check the tag matches VERSION
+        run: |
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          if [ "$GITHUB_REF_NAME" != "v$VERSION" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match VERSION ($VERSION)" >&2
+            exit 1
+          fi
+
+      - name: Test
+        run: swift test
+
+      - name: Package
+        run: scripts/package-release.sh
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          gh release create "$GITHUB_REF_NAME" \
+            "dist/MacToys-$VERSION.dmg" "dist/MacToys-$VERSION.zip" dist/SHA256SUMS \
+            --title "MacToys $VERSION" --generate-notes
