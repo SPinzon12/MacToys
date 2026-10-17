@@ -2,305 +2,236 @@
 
 [![CI](https://github.com/SPinzon12/MacToys/actions/workflows/ci.yml/badge.svg)](https://github.com/SPinzon12/MacToys/actions/workflows/ci.yml)
 
-A small macOS menu-bar app with quick clipboard and screen utilities behind global
-hotkeys — ported from [microsoft/PowerToys](https://github.com/microsoft/PowerToys)
-to the Mac:
+Quick clipboard and screen tools for your Mac, one shortcut away — ported from
+[Microsoft PowerToys](https://github.com/microsoft/PowerToys). MacToys lives in the
+menu bar, works offline, and keeps everything on your Mac.
 
-- **Color Picker** — PowerToys-style: a chip with the color follows the cursor,
-  scroll to magnify, click → copied, with HEX / RGB / HSL and recent colors.
-- **Text Extractor** — drag a region or click a word → OCR → clipboard.
-- **Clipboard history + Advanced Paste** — a Spotlight-style panel behind ⌃⇧V:
-  search everything you copied, paste it back, or paste it as plain text, OCR,
-  a file, JSON or Markdown.
-- **Keep Awake** — stop the Mac from sleeping for 15 min, 1 h, 2 h, 4 h or until
-  you turn it off, straight from the menu bar.
+| Tool | Shortcut | What it does |
+| ---- | -------- | ------------ |
+| [Color Picker](#color-picker) | ⌃⇧C | Shows the color under the cursor; click to copy it as HEX, RGB or HSL |
+| [Text Extractor](#text-extractor) | ⌃⇧O | Copies the text inside any area of the screen (OCR) |
+| [Clipboard history](#clipboard-history--advanced-paste) | ⌃⇧V | Search everything you copied; paste it back or as plain text, JSON, Markdown… |
+| [Keep Awake](#keep-awake) | — | Keeps the Mac from sleeping for a while, from the menu bar |
 
-## Download
-
-Grab the latest **MacToys-<version>.dmg** from
-[Releases](https://github.com/SPinzon12/MacToys/releases/latest) — a universal app
-for Apple silicon and Intel, macOS 14 or later. Prefer to build it yourself? See
-[Build & run](#build--run) and [Build a release](#build-a-release).
+Requires **macOS 14 or later** · Apple silicon and Intel · [MIT license](LICENSE)
 
 ## Install
 
-1. Download `MacToys-<version>.dmg` (or the `.zip`) from
-   [Releases](https://github.com/SPinzon12/MacToys/releases/latest). Optionally
-   check it against the release's `SHA256SUMS`: `shasum -a 256 -c SHA256SUMS`.
-2. Open the disk image and drag **MacToys** onto **Applications**.
-3. First launch: this build is **not notarized by Apple** yet, so macOS blocks it.
-   Double-click it once (macOS refuses), then open **System Settings → Privacy &
-   Security**, scroll down and click **Open Anyway** next to "MacToys" (asks
-   for your password). On macOS 14 **right-click → Open → Open** also works; from
-   macOS 15 on, only Open Anyway does. (Terminal alternative:
-   `xattr -dr com.apple.quarantine "/Applications/MacToys.app"`.)
-4. A toy-blocks icon appears in the menu bar (no Dock icon). Grant the two permissions it
-   asks for — see [Required macOS permissions](#required-macos-permissions) — and
-   relaunch it.
-5. Optional: **Open at Login** in the menu-bar panel starts it with your Mac.
+1. Download **MacToys-&lt;version&gt;.dmg** from the
+   [latest release](https://github.com/SPinzon12/MacToys/releases/latest).
+2. Open it and drag **MacToys** onto **Applications**.
+3. Open MacToys. macOS blocks it the first time because it isn't notarized by
+   Apple — go to **System Settings → Privacy & Security**, scroll down and click
+   **Open Anyway** (macOS asks for your password).
+4. Give it the two permissions it asks for, then relaunch it — see
+   [Permissions](#permissions).
 
-Requires macOS 14 or later; runs natively on Apple silicon and Intel.
+A toy-blocks icon appears in the menu bar (MacToys has no Dock icon). To start it
+with your Mac, click the icon and turn on **Open at Login**.
 
-Updating: replace the app in Applications. Because this build is ad-hoc signed,
-macOS treats each new version as a new app and asks for the permissions again —
-remove the old **MacToys** entries in Privacy & Security and grant them anew.
-Coming from the earlier "Mac PowerToys" build: quit it, turn off its Launch at
-Login, and delete "Mac PowerToys.app" — otherwise both apps run and watch the
-clipboard. Its clipboard history moves over to MacToys automatically on first
-launch; remove its old permission entries the same way.
+> **Terminal alternative for step 3:**
+> `xattr -dr com.apple.quarantine /Applications/MacToys.app`
 
-## Status
+## Using MacToys
 
-| Module         | Hotkey | T1 (skeleton)       | T2 (Color Picker) | T3 (Text Extractor) | T4 (Advanced Paste) |
-| -------------- | ------ | ------------------- | ----------------- | ------------------- | ------------------- |
-| Color Picker   | ⌃⇧C    | ✅ wired (stub)     | ✅ chip + zoom + card | —                 | —                   |
-| Text Extractor | ⌃⇧O    | ✅ wired (stub)     | —                 | ✅ region + word OCR | —                   |
-| Advanced Paste | ⌃⇧V    | ✅ wired (stub)     | —                 | —                   | ✅ transforms + tests |
+### Menu-bar panel
 
-- ✅ = done · ⬜ = planned · — = not applicable
+Click the toy-blocks icon to open the panel:
 
-All four tasks are done.
+- **Status chip** — green **Ready**, or what is missing (click it to fix permissions).
+- **Tool cards** — one per tool, with its shortcut; click a card to run it.
+- **Keep Awake card** — durations, a switch and a live countdown.
+- **Clear History**, **Open at Login** and **Quit**.
 
-T1 delivers the skeleton: menu-bar status item, global hotkey registration,
-permission preflight, and module stubs. T2 delivers the Color Picker, PowerToys-style: **⌃⇧C** leaves the cursor as it is
-and floats a small chip beside it — filled with the color under it, like
-PowerToys, with its code in black or white, whichever contrasts more — live.
-**Scroll up** to grow a magnifier above the chip (4× → 16×, with a pixel grid and
-the cursor's pixel outlined); scroll back down to hide it. **Click** (or ⏎) copies
-the color in your default format and opens a glass card next to the pointer with
-its approximate CSS name (`≈ Dodger Blue`), one row per format — **HEX**, **RGB**,
-**HSL** — to copy with a click (the format you copy becomes the default), your
-**10 recent colors** (click one to reuse it), **Pick Again** (⌘P) and Esc to
-close. Esc, right-click or ⌃⇧C again cancels. It needs the **Screen Recording**
-permission.
+Esc or a click elsewhere closes it.
 
-T3 delivers the Text Extractor: **⌃⇧O** captures the main display once and
-shows it dimmed behind an overlay. Drag a rectangle to OCR that region into
-the clipboard (small crops are upscaled ×1.5 first, like PowerOCR); a plain
-click instead copies just the word under the cursor (the full screen is OCR'd
-for the hit-test). Esc or right-click cancels (re-pressing the hotkey also
-cancels). It needs the same **Screen Recording** permission as the Color Picker.
+### Color Picker
 
-Performance: the overlay closes as soon as you release the mouse and OCR runs
-off the main thread; the result lands with a `Copied …` toast (or `No text
-found`). The selection is composited with Core Animation layers, so dragging
-costs ~0.1 ms per event instead of repainting the whole retina capture. Vision
-OCR usually takes ~40–190 ms, but the **first** `.accurate` request ever made
-by a given executable path takes ~26 s while macOS prepares the model (cached
-afterwards, also across rebuilds at the same path). The app runs a warm-up pass
-at launch to absorb it, and shows `Recognizing text…` if an extraction takes
-longer than 400 ms. A slow result never clobbers anything: only the newest
-extraction may write, and if you copied something else while it ran, your copy
-is kept (`Kept your newer copy`).
+**⌃⇧C** — a small chip follows the cursor, filled with the color under it and
+showing its code.
 
-**⌃⇧V** opens the clipboard panel — think Spotlight's clipboard view (⌘Space,
-then ⌘4). It sits centered in the upper third of the screen under the cursor:
+| Action | Result |
+| ------ | ------ |
+| Move the mouse | The chip updates live |
+| Scroll up / down | Shows a magnifier and zooms in (4× – 16×) / zooms out and hides it |
+| Click or ⏎ | Copies the color and opens the result card |
+| Esc, right-click or ⌃⇧C | Cancels |
 
-- **Search field** — type to filter; every word must match (case- and
-  accent-insensitive) against the text, file names and the source app.
-- **History list** (left) — newest first, grouped into Today / Yesterday /
-  Earlier, with thumbnails for images and Finder icons for files.
-- **Preview** (right) — the full text, image or file list, plus the source app,
-  when it was copied, and its size; under it, **Paste as…** lists only the
-  transforms valid for the selected item.
+The **result card** shows the color's closest name (`≈ Dodger Blue`) and one row
+per format — HEX, RGB, HSL. Click a row to copy it; that format becomes your
+default for next time. Your last 10 colors sit underneath (click one to reuse
+it). **Pick Again** (⌘P) starts over; Esc closes the card.
 
-| Key        | Action                                              |
-| ---------- | --------------------------------------------------- |
-| type       | filter                                              |
-| ↑ / ↓      | select                                              |
-| ⏎          | paste the item as it was copied                     |
-| ⌘1 – ⌘9    | paste as the Nth transform in **Paste as…**         |
-| esc        | clear the search, then close                        |
+### Text Extractor
 
-Pasting writes the item (or the transform result) to the clipboard and
-synthesizes a **⌘V** into the app that had focus before the panel opened; a
-pasted item moves back to the top.
+**⌃⇧O** — the screen dims.
 
-**What is recorded.** The pasteboard is polled every 0.5 s. Text, images and
-files are kept (files win over text, text wins over a rendered image of it);
-copying the same thing again moves it to the top instead of duplicating it.
-Copies marked as secret or throwaway by password managers and clipboard tools
-(`org.nspasteboard.ConcealedType`, `TransientType`, `AutoGeneratedType`) are
-never recorded, and transform results are not recorded either. The newest 200
-items are kept in `~/Library/Application Support/MacToys/` (`history.json`
-plus `images/*.png`, owner-only permissions) so history survives a relaunch.
-**Clear History** in the menu-bar panel deletes all of it.
+- **Drag** over an area to copy all the text inside it.
+- **Click** a single word to copy just that word.
+- **Esc** or right-click cancels.
 
-The transform list:
+A toast confirms the result (`Copied 42 chars`, `Copied word` or `No text found`).
+If you copy something else while the text is still being read, your newer copy is
+kept.
 
-- **Plain Text** — from text or HTML (tags stripped, entities decoded).
-- **Image to Text (OCR)** — Vision OCR of a clipboard image.
-- **Paste as .txt / .png / .html file** — writes a unique temp file and puts
-  its file URL on the clipboard (Finder-style paste).
-- **XML/CSV → JSON** — leading `<` means XML (Foundation `XMLParser`), else
-  CSV with a header row; pretty-printed JSON lands on the clipboard.
-- **HTML → Markdown** — minimal subset (h1–h6, p, br, strong, em, links,
-  lists, code, pre, blockquote); everything else is stripped to text.
-- **Video → MP4** / **Audio → M4A** — `AVAssetExportSession` transcode of a
-  copied media file. Upstream PowerToys offers MP3, but Apple ships no public
-  MP3 encoder, so audio lands as AAC/`.m4a` instead — the honest swap.
+> The very first extraction after installing can take about 30 seconds while
+> macOS prepares its text-recognition model. MacToys starts that preparation at
+> launch, and later extractions take a fraction of a second.
 
-The synthetic ⌘V needs the **Accessibility** permission — without it the
-transform still runs and the result still lands on the clipboard, but
-auto-paste is skipped and one alert explains where to grant the permission.
+### Clipboard history & Advanced Paste
 
-Unit tests cover the pure transforms (CSV/XML → JSON, HTML → Markdown, plain
-text, menu validity) and the clipboard history rules (capture, secrets,
-dedupe, cap, search, persistence) with `swift test`; OCR, transcoding, and paste synthesis
-are environment-bound and covered by manual use.
+**⌃⇧V** opens a Spotlight-style panel with everything you copied: search on top,
+your history on the left (Today / Yesterday / Earlier), and a preview of the
+selected item on the right.
 
-## Menu-bar panel
+| Key | Action |
+| --- | ------ |
+| Type | Filter by text, file name or source app |
+| ↑ ↓ | Select |
+| ⏎ | Paste the item as it was copied |
+| ⌘1 – ⌘9 | Paste it transformed (see **Paste as…** below) |
+| Esc | Clear the search, then close |
 
-Clicking the toy-blocks icon opens a glass panel under it (Esc or a click
-elsewhere closes it): a permission status chip (green **Ready** or what is
-missing — click it for the Permissions window), one card per module with its
-shortcut (click to run it), the **Keep Awake** card, and **Clear History**,
-**Open at Login** and **Quit**.
+The item is pasted straight into the app you were using. **Paste as…** only lists
+the transforms that fit the selected item:
 
-## Keep Awake
+| Transform | From |
+| --------- | ---- |
+| Plain Text | Text or HTML — formatting removed |
+| Image to Text | An image — text recognized with OCR |
+| Paste as .txt / .png / .html file | Text, image or HTML — saved to a file and pasted as that file |
+| JSON | CSV (with a header row) or XML |
+| Markdown | HTML |
+| Video → MP4, Audio → M4A | A copied video or audio file |
 
-The **Keep Awake** card in the menu-bar panel keeps the Mac from idle-sleeping:
-pick **15m**, **1h**, **2h**, **4h** or **∞**, or flip the switch (∞). A toast
-confirms it (`Keep Awake on · until 15:30`) and another says when it ends. While it
-is on, the menu-bar icon turns into a filled cup and the card counts down live
-(`42 min left · until 15:30`); **+15m** pushes a timed run back and the switch ends
-it early. By default the display stays on too; tick **Allow display to sleep** to
-let the screen turn off while the Mac keeps working (downloads, builds). The
-setting is remembered.
+### Keep Awake
 
-It uses the same IOKit power assertions as `caffeinate` (named "MacToys Keep
-Awake" in `pmset -g assertions`). macOS releases them when MacToys quits or
-crashes, so the Mac can never be left unable to sleep. A timed run is checked
-against the clock when the Mac wakes, so it never outlives its end. It does not
-keep a closed-lid MacBook awake — that needs administrator changes to the power
-settings and is intentionally left out. No hotkey: it is a set-and-forget toggle.
+In the panel's **Keep Awake** card, pick **15m**, **1h**, **2h**, **4h** or **∞**
+(or flip the switch). While it is on:
 
-## Design
+- the menu-bar icon becomes a filled cup and the card counts down
+  (`42 min left · until 15:30`);
+- **+15m** adds time, and the switch turns it off;
+- a toast tells you when it starts and when it ends.
 
-One small glass idiom across the app: real glass that samples what is behind
-the window (Liquid Glass `NSGlassEffectView` on macOS 26+, behind-window
-`NSVisualEffectView` before it), hairline borders, a lit rim highlight,
-continuous rounded corners, quiet typography, SF Symbols in hierarchical
-rendering and a single accent color. Tokens live in
-`Sources/MacToys/UI/Theme.swift`. The ⌃⇧V panel is SwiftUI (fade + scale
-in, keycap footer, animated selection); the Text Extractor overlay stays AppKit
-and paints the same language (rounded accent selection with corner handles and an
-outer glow). The Color Picker draws a PowerToys-style chip and magnifier, then
-a SwiftUI result card.
-Copying from the Text Extractor shows a small glass toast (`Copied 42 chars`); the
-Color Picker shows its result card instead.
+The screen stays on too; tick **Allow display to sleep** if you only need the Mac
+working (downloads, builds). Quitting MacToys always lets the Mac sleep again.
+Keep Awake does not keep a closed-lid MacBook awake.
 
-The idiom is inspired by a reference macOS menu-bar app; the tokens are
-self-authored — that project is GPL and no code was copied from it.
+## Permissions
 
-Toolchain note: this CommandLineTools-only environment ships **no
-`SwiftUIMacros` plugin**, so SwiftUI macros (`@State`, `@Observable`,
-`#Preview`, `@FocusState`) do not compile here. UI state lives in
-`ObservableObject` models instead, which are plain Swift and need no plugin.
+| Permission | Needed by | Why |
+| ---------- | --------- | --- |
+| Screen Recording | Color Picker, Text Extractor | To read the pixels and text on screen |
+| Accessibility | Clipboard history | To paste (⌘V) into the app you were using |
 
-## Build & run
+MacToys opens its **Permissions** window when something is missing (also from the
+status chip in the panel). For each permission:
 
-Requires macOS 14+ and a Swift 6 toolchain with the macOS 26 SDK or newer (Xcode
-26+, or just its CommandLineTools — no Xcode project involved).
+1. Click **Grant…** and accept the macOS dialog.
+2. Turn on **MacToys** in the System Settings pane that opens.
+3. Click **Relaunch MacToys** — macOS applies Screen Recording only after a
+   restart.
+
+The window shows each permission's status live.
+
+## Troubleshooting
+
+| Problem | Fix |
+| ------- | --- |
+| A permission is **ON** in System Settings but MacToys still can't use it | In the Permissions window, click **Reset Permissions…**, then grant both again. This is common after an update. |
+| macOS says MacToys "can't be opened" | **System Settings → Privacy & Security → Open Anyway** (see [Install](#install)). |
+| A shortcut does nothing | Another app may already use it; the tool cards in the panel still work. |
+| The first Text Extractor run is slow | Expected once after installing — see [Text Extractor](#text-extractor). |
+| Running from source, permissions don't stick | Grant them to your terminal app (Terminal, iTerm…), not to MacToys. |
+
+## Updating
+
+Download the new version and replace the app in **Applications**. macOS treats
+every new version as a new app, so it asks for the permissions again. If the old
+entries get in the way, use **Reset Permissions…** (see above).
+
+Coming from the older **Mac PowerToys** app: quit it, turn off its login item and
+delete it. Your clipboard history moves over to MacToys automatically.
+
+## Privacy
+
+- Nothing leaves your Mac: MacToys makes no network requests.
+- Clipboard history (the newest 200 items) is stored only in
+  `~/Library/Application Support/MacToys/`, readable by your user only.
+  **Clear History** in the panel deletes it.
+- Copies that password managers mark as secret are never recorded.
+
+## Development
+
+### Build and run
+
+Requires a Swift 6 toolchain with the macOS 26 SDK or newer: Xcode 26+, or just
+its Command Line Tools. There is no Xcode project.
 
 ```sh
 swift build
-swift run mactoys
-```
-
-Quit from the menu-bar panel. Under `swift run` there is no app bundle: the panel
-shows "Development build" and hides Open at Login.
-
-## Build a release
-
-```sh
-scripts/build-app.sh        # dist/MacToys.app (universal, ad-hoc signed)
-scripts/package-release.sh  # + dist/MacToys-<version>.zip / .dmg / SHA256SUMS
-```
-
-The version comes from `VERSION`; the build number defaults to the git commit
-count. Overrides: `ARCHS` (default `arm64 x86_64`), `BUNDLE_ID` (default
-`dev.spinzon12.MacToys`), `BUILD_NUMBER`, `SIGN_IDENTITY` (default `-`,
-ad-hoc). The app icon is rendered from `scripts/make-icon.swift` at build time.
-
-With a **Developer ID Application** certificate, pass it as `SIGN_IDENTITY` and
-notarize the result (`xcrun notarytool submit … --wait`, then
-`xcrun stapler staple`) so downloads open without the first-launch workaround and
-keep their permissions across updates. Notarization needs an Apple Developer
-account; this repository does not do it yet.
-
-Publishing: bump `VERSION`, commit, then push a matching tag (`git tag v0.2.0 &&
-git push origin v0.2.0`). The **Release** workflow (`.github/workflows/release.yml`)
-checks the tag against `VERSION`, runs the tests, packages the app and attaches the
-`.dmg`, `.zip` and `SHA256SUMS` to a new GitHub Release. **CI** builds and tests
-every push to `main`.
-
-## Required macOS permissions
-
-Two permissions are required for the full feature set:
-
-| Permission        | Needed by                     | System Settings pane |
-| ----------------- | ----------------------------- | -------------------- |
-| Screen Recording  | Color Picker, Text Extractor  | Privacy & Security → Screen Recording |
-| Accessibility     | Advanced Paste (synthetic ⌘V) | Privacy & Security → Accessibility |
-
-Steps:
-
-1. Launch the app — the **Permissions** window opens when something is missing
-   (also from the status chip at the top of the menu-bar panel). **Grant…** asks macOS for the
-   permission, which adds MacToys to the list in System Settings, and opens the
-   right pane; the status updates live. **Relaunch MacToys** applies Screen
-   Recording. If a switch is ON but MacToys still cannot use it (typical after an
-   update), **Reset Permissions…** makes macOS forget MacToys' grants — only
-   MacToys' — so you can grant them fresh.
-2. Or open **System Settings → Privacy & Security → Screen Recording** and enable
-   **MacToys**. When running from source (`swift run`), enable your terminal
-   app (Terminal/iTerm) instead — a bare executable run from a terminal is
-   attributed to the process that launched it.
-3. Open **System Settings → Privacy & Security → Accessibility** and enable the
-   same entry.
-4. Relaunch the app — macOS caches these checks at launch.
-
-## Hotkeys
-
-| Hotkey  | Action                                            |
-| ------- | ------------------------------------------------- |
-| ⌃⇧C     | Color Picker                                      |
-| ⌃⇧O     | Text Extractor                                    |
-| ⌃⇧V     | Clipboard history + Advanced Paste                |
-
-Chords are registered with Carbon `RegisterEventHotKey`. If a chord is already
-taken by another app it is logged at startup and skipped; the panel's module cards
-keep working.
-
-## Layout
-
-```
-Sources/MacToys/
-  main.swift              entry point (accessory NSApplication)
-  AppDelegate.swift       status item + menu + wiring
-  HotKeys.swift           Carbon global hotkeys
-  Permissions.swift       Screen Recording / Accessibility preflight
-  Modules/                one module entry per feature
-  UI/                     design tokens, clipboard panel, copy toasts
-  ColorPicker/            chip + zoom session, formats, recent colors, CSS names
-  TextExtractor/          Text Extractor overlay (session + selection + OCR)
-  AdvancedPaste/          coordinator + pure transforms (tested) + ⌘V paste
-    History/              clipboard history: capture rules, store, poller
-Tests/MacToysTests/       swift-testing suites for transforms + history
-Packaging/Info.plist      app bundle Info.plist template
-scripts/                  build-app.sh, package-release.sh, make-icon.swift
-VERSION                   release version (CFBundleShortVersionString)
-.github/workflows/        CI (build + test) and Release (tag → .dmg/.zip)
-```
-
-Run the tests with:
-
-```sh
+swift run mactoys     # runs from source: permissions belong to your terminal
 swift test
 ```
 
-## License
+### Build a release
 
-[MIT](LICENSE) — a personal project; use it, change it, share it. Ported modules
-keep their upstream notice in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+```sh
+scripts/build-app.sh        # → dist/MacToys.app (universal, ad-hoc signed)
+scripts/package-release.sh  # → dist/MacToys-<version>.dmg, .zip and SHA256SUMS
+```
+
+| Setting | Default | Notes |
+| ------- | ------- | ----- |
+| `VERSION` file | — | The release version |
+| `BUILD_NUMBER` | git commit count | |
+| `ARCHS` | `arm64 x86_64` | |
+| `BUNDLE_ID` | `dev.spinzon12.MacToys` | |
+| `SIGN_IDENTITY` | `-` (ad-hoc) | |
+
+**Publishing:** bump `VERSION`, commit, then push a matching tag
+(`git tag v0.4.0 && git push origin v0.4.0`). The
+[Release workflow](.github/workflows/release.yml) runs the tests and publishes
+the `.dmg`, `.zip` and `SHA256SUMS` as a GitHub Release. [CI](.github/workflows/ci.yml)
+builds and tests every push to `main`.
+
+### Project layout
+
+```
+Sources/MacToys/
+  AppDelegate.swift      status item, menu-bar panel wiring
+  HotKeys.swift          global shortcuts (Carbon)
+  Permissions.swift      Screen Recording / Accessibility
+  Modules/               one entry point per tool
+  ColorPicker/           chip + zoom session, formats, recent colors, color names
+  TextExtractor/         overlay, selection, OCR
+  AdvancedPaste/         clipboard panel coordinator, transforms, ⌘V
+    History/             clipboard history: capture rules, storage, polling
+  KeepAwake/             power assertions and timing
+  UI/                    design tokens, panels, cards, toasts
+Tests/MacToysTests/      swift-testing suites
+Packaging/Info.plist     app bundle template
+scripts/                 build-app.sh, package-release.sh, make-icon.swift
+.github/workflows/       CI and Release
+```
+
+### Notes for contributors
+
+- **No SwiftUI macros.** The Command Line Tools toolchain ships no
+  `SwiftUIMacros` plugin, so `@State`, `@Observable` and `#Preview` don't compile.
+  UI state lives in `ObservableObject` models instead.
+- **Design tokens** live in `Sources/MacToys/UI/Theme.swift`: glass surfaces
+  (Liquid Glass on macOS 26+), hairline borders, and the purple brand accent.
+- **Tests** cover the logic that doesn't need a screen: transforms, clipboard
+  history, color formats and names, Keep Awake timing, permissions. Drawing,
+  capture and pasting are checked by hand.
+
+## Credits & license
+
+[MIT](LICENSE) — a personal project; use it, change it, share it.
+
+The Color Picker, Text Extractor and Advanced Paste tools port the behavior of
+[Microsoft PowerToys](https://github.com/microsoft/PowerToys) (MIT); see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The visual style is inspired by
+[vorssaint-utils](https://github.com/vorssaint/vorssaint-utils); no code was copied.

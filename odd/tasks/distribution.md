@@ -51,7 +51,8 @@ Branch: `main` (repo convention, no remote yet). Delivery: ask-on-risk. Test run
 - [x] D5 — S5 docs + THIRD_PARTY_NOTICES. Route: inline. Check: structural readback.
        DONE f75432a: README Install / Build a release, THIRD_PARTY_NOTICES (PowerToys
        MIT text fetched verbatim), notice copied into the bundle.
-- [ ] D6 — S6 blocked (Developer ID).
+- [x] D6 — S6 dropped: user decided not to notarize ("la notarizacion no la vamos a
+       hacer", 2026-10-17). README keeps the Open Anyway steps, no notarization text.
 - [x] D7 — S7/S8 publish. DONE: user confirmed "Repo + release v0.1.0"; native
        review approved (lineage review-acb3716dcedf3828); github.com/SPinzon12/MacToys
        created public, main pushed (95e4816); CI run 38999011699 green (Xcode 26.6,
@@ -82,3 +83,8 @@ Branch: `main` (repo convention, no remote yet). Delivery: ask-on-risk. Test run
   Package tools 6.0 + conditional CLT testing plugin (both branches checked),
   .atl untracked, CI + Release workflows (YAML valid; not yet run on GitHub).
 - 2026-10-17: published. Tools 6.0 was required: the runner has Swift 6.3.3.
+- 2026-10-17 user (verbatim): "volvimos, la notarizacion no la vamos a hacer. pero si
+  quiero organizar bien el readme esta un poco raro" → D6 dropped; README rewritten
+  user-first (tools table, install, usage per tool, permissions, troubleshooting,
+  updating, privacy) then development; internal task history and notarization text
+  removed. Claims checked: no network APIs in Sources; all anchors/links resolve.
