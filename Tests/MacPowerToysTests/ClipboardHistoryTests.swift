@@ -158,6 +158,18 @@ struct ClipboardHistoryTests {
         #expect((attributes[.posixPermissions] as? NSNumber)?.intValue == 0o600)
     }
 
+    @Test func storeTightensAPreExistingFolder() throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mpt-history-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o755])
+
+        try ClipboardHistoryStore(directory: dir).save(ClipboardHistory())
+
+        let attributes = try FileManager.default.attributesOfItem(atPath: dir.path)
+        #expect((attributes[.posixPermissions] as? NSNumber)?.intValue == 0o700)
+    }
+
     @Test func storeWritesAndDeletesImageFiles() throws {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent("mpt-history-\(UUID().uuidString)", isDirectory: true)

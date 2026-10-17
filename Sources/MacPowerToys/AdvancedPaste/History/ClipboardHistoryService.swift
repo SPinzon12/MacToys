@@ -33,11 +33,16 @@ final class ClipboardHistoryService {
     /// moment ago is already listed.
     func poll() {
         let pasteboard = NSPasteboard.general
-        guard pasteboard.changeCount != lastChangeCount else { return }
-        lastChangeCount = pasteboard.changeCount
-        guard let entry = ClipboardEntry.capture(Self.snapshot(of: pasteboard), date: Date()) else { return }
+        let changeCount = pasteboard.changeCount
+        guard changeCount != lastChangeCount else { return }
+        lastChangeCount = changeCount
+        let snapshot = Self.snapshot(of: pasteboard)
+        // Swapped mid-read (types and contents may belong to different copies,
+        // one of them a marked secret): drop it, the next poll reads it whole.
+        guard pasteboard.changeCount == changeCount else { return }
+        guard let entry = ClipboardEntry.capture(snapshot, date: Date()) else { return }
         let outcome = history.record(entry)
-        if outcome.inserted, entry.kind == .image, let png = Self.pngData(from: pasteboard) {
+        if outcome.inserted, entry.kind == .image, let png = snapshot.pngData {
             try? store.writeImage(png, for: entry)
         }
         store.deleteImages(of: outcome.evicted)

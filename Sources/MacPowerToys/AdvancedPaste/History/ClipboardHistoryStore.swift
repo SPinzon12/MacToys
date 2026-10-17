@@ -54,6 +54,8 @@ struct ClipboardHistoryStore {
             withIntermediateDirectories: true,
             attributes: [.posixPermissions: 0o700]
         )
+        // createDirectory leaves an existing folder's permissions alone.
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: url.path)
     }
 
     private func ownerOnly(_ url: URL) throws {

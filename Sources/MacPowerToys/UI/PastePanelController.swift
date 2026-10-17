@@ -27,7 +27,12 @@ final class PastePanelController: NSObject, NSWindowDelegate {
         contentFor: @escaping (ClipboardEntry) -> ClipboardContent,
         imageData: @escaping (ClipboardEntry) -> Data?
     ) async -> PastePanelPick? {
-        await withCheckedContinuation { (continuation: CheckedContinuation<PastePanelPick?, Never>) in
+        // ⌃⇧V while the panel is up closes it, like Spotlight's own toggle.
+        if continuation != nil {
+            finish(nil)
+            return nil
+        }
+        return await withCheckedContinuation { (continuation: CheckedContinuation<PastePanelPick?, Never>) in
             let model = PastePanelModel(history: history, contentFor: contentFor, imageData: imageData) { [weak self] pick in
                 // Deferred: finish() closes the panel, then the coordinator pastes.
                 Task { @MainActor in self?.finish(pick) }
