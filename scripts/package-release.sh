@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Builds the app and packages it for download:
+#   dist/MacPowerToys-<version>.zip   (ditto, keeps signature and attributes)
+#   dist/MacPowerToys-<version>.dmg   (drag-to-Applications window)
+#   dist/SHA256SUMS
+#
+#   scripts/package-release.sh
+#
+# Same environment overrides as scripts/build-app.sh.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+VERSION="$(tr -d '[:space:]' < "$ROOT/VERSION")"
+DIST="$ROOT/dist"
+APP="$DIST/Mac PowerToys.app"
+NAME="MacPowerToys-$VERSION"
+
+"$ROOT/scripts/build-app.sh"
+
+echo "==> Zipping"
+rm -f "$DIST/$NAME.zip"
+ditto -c -k --sequesterRsrc --keepParent "$APP" "$DIST/$NAME.zip"
+
+echo "==> Building disk image"
+STAGE="$(mktemp -d)"
+trap 'rm -rf "$STAGE"' EXIT
+cp -R "$APP" "$STAGE/"
+ln -s /Applications "$STAGE/Applications"
+rm -f "$DIST/$NAME.dmg"
+hdiutil create -quiet -volname "Mac PowerToys $VERSION" -srcfolder "$STAGE" \
+    -fs HFS+ -format UDZO "$DIST/$NAME.dmg"
+hdiutil verify -quiet "$DIST/$NAME.dmg"
+
+echo "==> Checksums"
+(cd "$DIST" && shasum -a 256 "$NAME.zip" "$NAME.dmg" > SHA256SUMS && cat SHA256SUMS)
+echo "==> Done: $DIST"
