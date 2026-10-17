@@ -33,7 +33,7 @@ for Apple silicon and Intel, macOS 14 or later. Prefer to build it yourself? See
    for your password). On macOS 14 **right-click → Open → Open** also works; from
    macOS 15 on, only Open Anyway does. (Terminal alternative:
    `xattr -dr com.apple.quarantine "/Applications/MacToys.app"`.)
-4. A wand icon appears in the menu bar (no Dock icon). Grant the two permissions it
+4. A toy-blocks icon appears in the menu bar (no Dock icon). Grant the two permissions it
    asks for — see [Required macOS permissions](#required-macos-permissions) — and
    relaunch it.
 5. Optional: **Launch at Login** in the menu-bar menu starts it with your Mac.

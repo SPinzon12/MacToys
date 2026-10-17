@@ -25,10 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
 
     private func setupStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.image = NSImage(
-            systemSymbolName: "wand.and.stars",
-            accessibilityDescription: "MacToys"
-        )
+        item.button?.image = BrandGlyph.menuBar()
         item.button?.toolTip = "MacToys"
 
         let menu = NSMenu()
@@ -170,10 +167,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
     /// A filled cup while Keep Awake is on, so the state is visible at a glance.
     private func updateStatusIcon() {
         let active = KeepAwakeController.shared.isActive
-        statusItem?.button?.image = NSImage(
-            systemSymbolName: active ? "cup.and.saucer.fill" : "wand.and.stars",
-            accessibilityDescription: active ? "MacToys — Keep Awake on" : "MacToys"
-        )
+        statusItem?.button?.image = active
+            ? NSImage(systemSymbolName: "cup.and.saucer.fill", accessibilityDescription: "MacToys — Keep Awake on")
+            : BrandGlyph.menuBar()
         statusItem?.button?.toolTip = active ? "MacToys — Keep Awake on" : "MacToys"
     }
 
