@@ -90,8 +90,17 @@ enum Permissions {
         )
     }
 
-    /// Shows the system prompt (first time) and opens the right pane.
+    /// First click: ask macOS, which shows its own dialog (with its own "Open
+    /// System Settings" button) and lists MacToys. Later clicks: macOS no longer
+    /// prompts, so open the pane directly. Opening the pane on the first click
+    /// too stacked two windows on top of each other.
     static func request(_ permission: Permission) {
+        let key = "permissions.requested.\(permission.tccService)"
+        guard !UserDefaults.standard.bool(forKey: key) else {
+            openSettings(for: permission)
+            return
+        }
+        UserDefaults.standard.set(true, forKey: key)
         switch permission {
         case .screenRecording:
             _ = CGRequestScreenCaptureAccess()
@@ -100,7 +109,6 @@ enum Permissions {
             // the global itself is not concurrency-safe under Swift 6.
             _ = AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
         }
-        openSettings(for: permission)
     }
 
     static func openSettings(for permission: Permission) {
@@ -128,6 +136,10 @@ enum Permissions {
                 return false
             }
             guard process.terminationStatus == 0 else { return false }
+        }
+        // Forgotten grants prompt again, so the next Grant shows macOS's dialog.
+        for permission in Permission.allCases {
+            UserDefaults.standard.removeObject(forKey: "permissions.requested.\(permission.tccService)")
         }
         return true
     }
