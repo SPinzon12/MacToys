@@ -16,7 +16,7 @@ enum Permission: CaseIterable {
     /// Who needs it, in plain words, for the Permissions window.
     var reason: String {
         switch self {
-        case .screenRecording: "Text Extractor reads the screen to recognize text."
+        case .screenRecording: "Color Picker and Text Extractor read the pixels on screen."
         case .accessibility: "Clipboard History pastes into the app you were using (⌘V)."
         }
     }

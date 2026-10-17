@@ -1,44 +1,34 @@
 import AppKit
 
-/// Color Picker flow: the system's own loupe (`NSColorSampler`, the one every
-/// macOS color panel uses) picks the color; MacToys copies it in the saved
-/// format and shows the result card with all formats and recent colors.
-///
-/// The system samples the screen itself, so this module needs no Screen
-/// Recording permission (that is what NSColorSampler was introduced for).
+/// Color Picker flow, PowerToys-style: a chip with the color and its code
+/// follows the cursor (the scroll wheel adds a magnifier); a click copies the
+/// color in the saved format and shows the result card with all formats and
+/// recent colors. Pressing the hotkey again while picking cancels.
 @MainActor
 final class ColorPickerController {
     static let shared = ColorPickerController()
 
-    private var sampling = false
-    /// Held for the session: the sampler is documented to keep itself alive, but
-    /// if it were ever freed without calling back, `sampling` would stick and the
-    /// hotkey would stop working.
-    private var sampler: NSColorSampler?
+    private var session: ColorPickerSession?
     private var history = ColorHistory.load()
 
     private init() {}
 
     func pick() {
-        // The system loupe is already up: it owns Esc and the click.
-        guard !sampling else { return }
-        sampling = true
-        // Gone at once, not faded: the loupe must not sample the old card.
-        ColorResultPanelController.shared.close(animated: false)
-        let sampler = NSColorSampler()
-        self.sampler = sampler
-        sampler.show { selected in
-            // Documented to run on the main thread.
-            MainActor.assumeIsolated {
-                ColorPickerController.shared.finishSampling(selected)
-            }
+        if let session { // re-trigger while picking cancels; sessions never stack
+            session.finish()
+            return
         }
+        // Gone at once, not faded: the next capture must not see the old card.
+        ColorResultPanelController.shared.close(animated: false)
+        let session = ColorPickerSession(
+            onPicked: { color in ColorPickerController.shared.picked(color) },
+            onEnded: { ColorPickerController.shared.session = nil }
+        )
+        self.session = session
+        session.begin()
     }
 
-    private func finishSampling(_ selected: NSColor?) {
-        sampling = false
-        sampler = nil
-        guard let selected, let color = PickedColor(selected) else { return } // cancelled
+    private func picked(_ color: PickedColor) {
         let format = ColorFormat.saved
         Self.copy(color.string(in: format))
         history.record(color)

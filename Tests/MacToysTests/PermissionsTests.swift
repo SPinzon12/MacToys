@@ -28,9 +28,9 @@ struct PermissionsTests {
     @Test func eachPermissionExplainsWhoNeedsIt() {
         #expect(Permission.screenRecording.title == "Screen Recording")
         #expect(Permission.accessibility.title == "Accessibility")
-        // The Color Picker uses the system loupe (NSColorSampler): no Screen Recording.
+        // Both sample the screen themselves (the Color Picker's chip and magnifier).
+        #expect(Permission.screenRecording.reason.contains("Color Picker"))
         #expect(Permission.screenRecording.reason.contains("Text Extractor"))
-        #expect(!Permission.screenRecording.reason.contains("Color Picker"))
         #expect(Permission.accessibility.reason.contains("⌘V"))
     }
 }

@@ -6,8 +6,8 @@ A small macOS menu-bar app with quick clipboard and screen utilities behind glob
 hotkeys — ported from [microsoft/PowerToys](https://github.com/microsoft/PowerToys)
 to the Mac:
 
-- **Color Picker** — the native macOS loupe → click → copied, with HEX / RGB / HSL
-  and your recent colors one click away.
+- **Color Picker** — PowerToys-style: a chip with the color follows the cursor,
+  scroll to magnify, click → copied, with HEX / RGB / HSL and recent colors.
 - **Text Extractor** — drag a region or click a word → OCR → clipboard.
 - **Clipboard history + Advanced Paste** — a Spotlight-style panel behind ⌃⇧V:
   search everything you copied, paste it back, or paste it as plain text, OCR,
@@ -53,7 +53,7 @@ launch; remove its old permission entries the same way.
 
 | Module         | Hotkey | T1 (skeleton)       | T2 (Color Picker) | T3 (Text Extractor) | T4 (Advanced Paste) |
 | -------------- | ------ | ------------------- | ----------------- | ------------------- | ------------------- |
-| Color Picker   | ⌃⇧C    | ✅ wired (stub)     | ✅ system loupe + card | —                | —                   |
+| Color Picker   | ⌃⇧C    | ✅ wired (stub)     | ✅ chip + zoom + card | —                 | —                   |
 | Text Extractor | ⌃⇧O    | ✅ wired (stub)     | —                 | ✅ region + word OCR | —                   |
 | Advanced Paste | ⌃⇧V    | ✅ wired (stub)     | —                 | —                   | ✅ transforms + tests |
 
@@ -62,14 +62,16 @@ launch; remove its old permission entries the same way.
 All four tasks are done.
 
 T1 delivers the skeleton: menu-bar status item, global hotkey registration,
-permission preflight, and module stubs. T2 delivers the Color Picker: **⌃⇧C** opens the system color loupe — the same one
-every macOS color panel uses (`NSColorSampler`). Click a pixel and the color is
-copied right away in your default format; a glass card then appears next to the
-pointer with its approximate CSS name (`≈ Dodger Blue`), one row per format —
-**HEX**, **RGB**, **HSL** — to copy with a click (the format you copy becomes the
-default), your **10 recent colors** (click one to reuse it), **Pick Again** (⌘P)
-and Esc to close. Esc in the loupe cancels. Because the system does the sampling,
-the Color Picker needs **no Screen Recording permission**.
+permission preflight, and module stubs. T2 delivers the Color Picker, PowerToys-style: **⌃⇧C** leaves the cursor as it is
+and floats a small chip beside it with the color under it and its code, live.
+**Scroll up** to grow a magnifier above the chip (4× → 16×, with a pixel grid and
+the cursor's pixel outlined); scroll back down to hide it. **Click** (or ⏎) copies
+the color in your default format and opens a glass card next to the pointer with
+its approximate CSS name (`≈ Dodger Blue`), one row per format — **HEX**, **RGB**,
+**HSL** — to copy with a click (the format you copy becomes the default), your
+**10 recent colors** (click one to reuse it), **Pick Again** (⌘P) and Esc to
+close. Esc, right-click or ⌃⇧C again cancels. It needs the **Screen Recording**
+permission.
 
 T3 delivers the Text Extractor: **⌃⇧O** captures the main display once and
 shows it dimmed behind an overlay. Drag a rectangle to OCR that region into
@@ -182,7 +184,8 @@ rendering and a single accent color. Tokens live in
 `Sources/MacToys/UI/Theme.swift`. The ⌃⇧V panel is SwiftUI (fade + scale
 in, keycap footer, animated selection); the Text Extractor overlay stays AppKit
 and paints the same language (rounded accent selection with corner handles and an
-outer glow). The Color Picker uses the system loupe and a SwiftUI result card.
+outer glow). The Color Picker draws a PowerToys-style chip and magnifier, then
+a SwiftUI result card.
 Copying from the Text Extractor shows a small glass toast (`Copied 42 chars`); the
 Color Picker shows its result card instead.
 
@@ -237,7 +240,7 @@ Two permissions are required for the full feature set:
 
 | Permission        | Needed by                     | System Settings pane |
 | ----------------- | ----------------------------- | -------------------- |
-| Screen Recording  | Text Extractor                | Privacy & Security → Screen Recording |
+| Screen Recording  | Color Picker, Text Extractor  | Privacy & Security → Screen Recording |
 | Accessibility     | Advanced Paste (synthetic ⌘V) | Privacy & Security → Accessibility |
 
 Steps:
@@ -279,7 +282,7 @@ Sources/MacToys/
   Permissions.swift       Screen Recording / Accessibility preflight
   Modules/                one module entry per feature
   UI/                     design tokens, clipboard panel, copy toasts
-  ColorPicker/            system-loupe flow, formats, recent colors, CSS names
+  ColorPicker/            chip + zoom session, formats, recent colors, CSS names
   TextExtractor/          Text Extractor overlay (session + selection + OCR)
   AdvancedPaste/          coordinator + pure transforms (tested) + ⌘V paste
     History/              clipboard history: capture rules, store, poller
