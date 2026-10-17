@@ -138,7 +138,9 @@ final class PastePanelController: NSObject, NSWindowDelegate {
                 context.duration = Theme.Motion.dismissDuration
                 window.animator().alphaValue = 0
             }, completionHandler: {
-                window.orderOut(nil)
+                // AppKit runs the completion on the main thread, but the closure
+                // type is not main-actor isolated.
+                MainActor.assumeIsolated { window.orderOut(nil) }
             })
         }
         window = nil
