@@ -28,8 +28,7 @@ Branch: `main` (repo convention, no remote yet). Delivery: ask-on-risk. Test run
   executable `mactoys`, bundle id `dev.spinzon12.MacToys`, artifacts
   `MacToys-<version>.dmg/.zip`; history folder migrated MacPowerToys → MacToys.
   Source in the repo; the compiled app ships as GitHub Release assets (not in git).
-- Assumptions (parent defaults): first version 0.1.0; repo name `SPinzon12/MacToys`
-  (pending user confirmation; earlier authorization was for `mac-powertoys`).
+- Repo: github.com/SPinzon12/MacToys (public). First version 0.1.0.
 - License: MIT, copyright "spinzon12" (decided 2026-10-16, see Log).
 
 ## Tasks
@@ -53,9 +52,11 @@ Branch: `main` (repo convention, no remote yet). Delivery: ask-on-risk. Test run
        DONE f75432a: README Install / Build a release, THIRD_PARTY_NOTICES (PowerToys
        MIT text fetched verbatim), notice copied into the bundle.
 - [ ] D6 — S6 blocked (Developer ID).
-- [ ] D7 — S7/S8 publish: rename done + CI/Release workflows written; pending
-       confirmation of repo `SPinzon12/MacToys`, then create + push + first CI run,
-       then (separate confirmation) tag v0.1.0 release.
+- [x] D7 — S7/S8 publish. DONE: user confirmed "Repo + release v0.1.0"; native
+       review approved (lineage review-acb3716dcedf3828); github.com/SPinzon12/MacToys
+       created public, main pushed (95e4816); CI run 38999011699 green (Xcode 26.6,
+       Swift 6.3.3, 72 tests); tag v0.1.0 → Release run 38999144889 green; assets
+       downloaded back: SHA256SUMS OK, dmg app universal + signature valid.
 
 ## Log
 - L1 (2026-10-16) "arregla también lo de los tests, y comencemos a organizar para que
@@ -80,3 +81,4 @@ Branch: `main` (repo convention, no remote yet). Delivery: ask-on-risk. Test run
 - 2026-10-16: rename to MacToys (72 tests incl. 3 migration tests, RED→GREEN),
   Package tools 6.0 + conditional CLT testing plugin (both branches checked),
   .atl untracked, CI + Release workflows (YAML valid; not yet run on GitHub).
+- 2026-10-17: published. Tools 6.0 was required: the runner has Swift 6.3.3.
