@@ -6,7 +6,8 @@ A small macOS menu-bar app with quick clipboard and screen utilities behind glob
 hotkeys — ported from [microsoft/PowerToys](https://github.com/microsoft/PowerToys)
 to the Mac:
 
-- **Color Picker** — a round loupe on the cursor → click → copy HEX, RGB or HSL.
+- **Color Picker** — the native macOS loupe → click → copied, with HEX / RGB / HSL
+  and your recent colors one click away.
 - **Text Extractor** — drag a region or click a word → OCR → clipboard.
 - **Clipboard history + Advanced Paste** — a Spotlight-style panel behind ⌃⇧V:
   search everything you copied, paste it back, or paste it as plain text, OCR,
@@ -61,13 +62,14 @@ launch; remove its old permission entries the same way.
 All four tasks are done.
 
 T1 delivers the skeleton: menu-bar status item, global hotkey registration,
-permission preflight, and module stubs. T2 delivers the Color Picker: **⌃⇧C**
-opens a round loupe centered on the cursor — 10× magnified pixels with a pixel
-grid, the sampled pixel outlined, and a ring painted in the color under it. A
-glass card below shows the value in **HEX**, **RGB** or **HSL**: **⇥** / **← →**
-switch the format (remembered for next time), click or **⏎** copies it, Esc or
-right-click cancels (re-pressing the hotkey also cancels). It needs the **Screen
-Recording** permission — without it, an alert opens the Permissions window.
+permission preflight, and module stubs. T2 delivers the Color Picker: **⌃⇧C** opens the system color loupe — the same one
+every macOS color panel uses (`NSColorSampler`). Click a pixel and the color is
+copied right away in your default format; a glass card then appears next to the
+pointer with its approximate CSS name (`≈ Dodger Blue`), one row per format —
+**HEX**, **RGB**, **HSL** — to copy with a click (the format you copy becomes the
+default), your **10 recent colors** (click one to reuse it), **Pick Again** (⌘P)
+and Esc to close. Esc in the loupe cancels. Because the system does the sampling,
+the Color Picker needs **no Screen Recording permission**.
 
 T3 delivers the Text Extractor: **⌃⇧O** captures the main display once and
 shows it dimmed behind an overlay. Drag a rectangle to OCR that region into
@@ -235,7 +237,7 @@ Two permissions are required for the full feature set:
 
 | Permission        | Needed by                     | System Settings pane |
 | ----------------- | ----------------------------- | -------------------- |
-| Screen Recording  | Color Picker, Text Extractor  | Privacy & Security → Screen Recording |
+| Screen Recording  | Text Extractor                | Privacy & Security → Screen Recording |
 | Accessibility     | Advanced Paste (synthetic ⌘V) | Privacy & Security → Accessibility |
 
 Steps:
