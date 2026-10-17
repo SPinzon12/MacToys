@@ -126,10 +126,15 @@ enum Permissions {
     /// Screen Recording only takes effect in a new process.
     static func relaunch() {
         let path = Bundle.main.bundlePath
+        let pid = String(ProcessInfo.processInfo.processIdentifier)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/sh")
-        // Wait for this instance to quit, then open a fresh one.
-        process.arguments = ["-c", "sleep 0.5; /usr/bin/open -n \"$0\"", path]
+        // Wait until this instance has really quit, then open a fresh one: a
+        // fixed delay could start a second copy (two icons, clashing hotkeys).
+        process.arguments = [
+            "-c", "while kill -0 \"$1\" 2>/dev/null; do sleep 0.1; done; /usr/bin/open -n \"$0\"",
+            path, pid
+        ]
         try? process.run()
         NSApp.terminate(nil)
     }
