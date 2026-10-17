@@ -57,6 +57,15 @@ struct PermissionStatus: Equatable {
 
     var allGranted: Bool { screenRecording && accessibility }
 
+    /// One line for the panel's status chip.
+    var summary: String {
+        switch missing.count {
+        case 0: "Ready"
+        case 1: "1 permission missing"
+        default: "\(missing.count) permissions missing"
+        }
+    }
+
     var missing: [Permission] {
         Permission.allCases.filter { !isGranted($0) }
     }

@@ -36,7 +36,7 @@ for Apple silicon and Intel, macOS 14 or later. Prefer to build it yourself? See
 4. A toy-blocks icon appears in the menu bar (no Dock icon). Grant the two permissions it
    asks for — see [Required macOS permissions](#required-macos-permissions) — and
    relaunch it.
-5. Optional: **Launch at Login** in the menu-bar menu starts it with your Mac.
+5. Optional: **Open at Login** in the menu-bar panel starts it with your Mac.
 
 Requires macOS 14 or later; runs natively on Apple silicon and Intel.
 
@@ -117,7 +117,7 @@ Copies marked as secret or throwaway by password managers and clipboard tools
 never recorded, and transform results are not recorded either. The newest 200
 items are kept in `~/Library/Application Support/MacToys/` (`history.json`
 plus `images/*.png`, owner-only permissions) so history survives a relaunch.
-**Clear Clipboard History…** in the status menu deletes all of it.
+**Clear History** in the menu-bar panel deletes all of it.
 
 The transform list:
 
@@ -142,16 +142,24 @@ text, menu validity) and the clipboard history rules (capture, secrets,
 dedupe, cap, search, persistence) with `swift test`; OCR, transcoding, and paste synthesis
 are environment-bound and covered by manual use.
 
+## Menu-bar panel
+
+Clicking the toy-blocks icon opens a glass panel under it (Esc or a click
+elsewhere closes it): a permission status chip (green **Ready** or what is
+missing — click it for the Permissions window), one card per module with its
+shortcut (click to run it), the **Keep Awake** card, and **Clear History**,
+**Open at Login** and **Quit**.
+
 ## Keep Awake
 
-**Keep Awake** in the menu-bar menu keeps the Mac from idle-sleeping for 15
-minutes, 1, 2 or 4 hours, or indefinitely. A toast confirms it (`Keep Awake on ·
-until 15:30`) and another says when it ends. While it is on, the menu-bar icon turns
-into a filled cup and the submenu shows the time left and the end time
-(`On — 42 min left · until 15:30`); **Add 15 Minutes** pushes a timed run back and
-**Turn Off** ends it early. By default the display stays on too; tick **Allow Display to Sleep** to let
-the screen turn off while the Mac keeps working (downloads, builds). The setting is
-remembered.
+The **Keep Awake** card in the menu-bar panel keeps the Mac from idle-sleeping:
+pick **15m**, **1h**, **2h**, **4h** or **∞**, or flip the switch (∞). A toast
+confirms it (`Keep Awake on · until 15:30`) and another says when it ends. While it
+is on, the menu-bar icon turns into a filled cup and the card counts down live
+(`42 min left · until 15:30`); **+15m** pushes a timed run back and the switch ends
+it early. By default the display stays on too; tick **Allow display to sleep** to
+let the screen turn off while the Mac keeps working (downloads, builds). The
+setting is remembered.
 
 It uses the same IOKit power assertions as `caffeinate` (named "MacToys Keep
 Awake" in `pmset -g assertions`). macOS releases them when MacToys quits or
@@ -192,8 +200,8 @@ swift build
 swift run mactoys
 ```
 
-Quit from the status-item menu (⌘Q). Under `swift run` there is no app bundle:
-the menu shows "Development build" and Launch at Login is disabled.
+Quit from the menu-bar panel. Under `swift run` there is no app bundle: the panel
+shows "Development build" and hides Open at Login.
 
 ## Build a release
 
@@ -231,7 +239,7 @@ Two permissions are required for the full feature set:
 Steps:
 
 1. Launch the app — the **Permissions** window opens when something is missing
-   (also under **Permissions…** in the menu). **Grant…** asks macOS for the
+   (also from the status chip at the top of the menu-bar panel). **Grant…** asks macOS for the
    permission, which adds MacToys to the list in System Settings, and opens the
    right pane; the status updates live. **Relaunch MacToys** applies Screen
    Recording. If a switch is ON but MacToys still cannot use it (typical after an
@@ -252,11 +260,10 @@ Steps:
 | ⌃⇧C     | Color Picker                                      |
 | ⌃⇧O     | Text Extractor                                    |
 | ⌃⇧V     | Clipboard history + Advanced Paste                |
-| ⌘Q      | Quit (status-item menu)                           |
 
 Chords are registered with Carbon `RegisterEventHotKey`. If a chord is already
-taken by another app it is logged at startup and skipped; the menu items keep
-working.
+taken by another app it is logged at startup and skipped; the panel's module cards
+keep working.
 
 ## Layout
 

@@ -18,6 +18,17 @@ enum KeepAwakeDuration: CaseIterable {
         }
     }
 
+    /// Chip label in the menu-bar panel.
+    var shortTitle: String {
+        switch self {
+        case .minutes15: "15m"
+        case .hour1: "1h"
+        case .hours2: "2h"
+        case .hours4: "4h"
+        case .indefinitely: "∞"
+        }
+    }
+
     /// nil = until turned off.
     var interval: TimeInterval? {
         switch self {
@@ -82,6 +93,16 @@ struct KeepAwakeSession {
         formatter.dateStyle = .none
         formatter.timeStyle = .short
         return formatter
+    }
+
+    /// Subtitle of the panel's Keep Awake card: the status line without "On — ".
+    static func cardSubtitle(_ session: KeepAwakeSession?, now: Date = Date(), clock: DateFormatter = Self.clock) -> String {
+        guard let session else { return "Off — your Mac sleeps as usual" }
+        guard let remaining = session.remaining(at: now), let endsAt = session.endsAt else {
+            return "Until you turn it off"
+        }
+        let left = statusLabel(remaining: remaining).replacingOccurrences(of: "On — ", with: "")
+        return "\(left) · until \(clock.string(from: endsAt))"
     }
 
     /// The remaining-time part of the status line.
