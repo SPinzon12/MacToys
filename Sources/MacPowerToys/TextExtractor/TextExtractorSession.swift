@@ -110,7 +110,7 @@ final class TextExtractorSession: NSObject {
         let text = lines.joined(separator: "\n")
         // Nothing recognized → leave the clipboard alone instead of emptying it.
         if !text.isEmpty {
-            copy(text)
+            copy(text, confirmation: "Copied \(text.count) \(text.count == 1 ? "char" : "chars")")
         }
         finish()
     }
@@ -129,15 +129,17 @@ final class TextExtractorSession: NSObject {
         // same display, so the click maps straight onto the word boxes.
         let normalized = CGPoint(x: point.x / bounds.width, y: point.y / bounds.height)
         if let word = cachedWords?.first(where: { $0.box.contains(normalized) }) {
-            copy(word.text)
+            copy(word.text, confirmation: "Copied word")
         }
         finish()
     }
 
-    private func copy(_ text: String) {
+    /// Copies `text` and confirms it with a toast reading `confirmation`.
+    private func copy(_ text: String, confirmation: String) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         _ = pasteboard.setString(text, forType: .string)
+        Toast.show(confirmation, leading: .symbol("text.viewfinder"))
     }
 
     /// View rect (y-up, origin bottom-left) → image pixels (y-down, origin top-left).

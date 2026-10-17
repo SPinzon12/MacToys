@@ -2,8 +2,9 @@ import AppKit
 import Carbon
 
 /// The Text Extractor overlay's content view: the captured display, a 50% dim
-/// over it, a rubber-band selection that punches through the dim, the hint
-/// line, and input routing back to the session.
+/// over it, a rubber-band selection that punches through the dim (accent
+/// border, outer glow, corner handles, size chip), the hint line, and input
+/// routing back to the session.
 final class RegionSelectionView: NSView {
     /// A drag shorter than this is a click and means word mode (PowerOCR ~4 px).
     static let dragThreshold: CGFloat = 4
@@ -79,12 +80,15 @@ final class RegionSelectionView: NSView {
         if let selection {
             // Punch through the dim so the drag shows the real pixels, rounded
             // to match the selection chrome drawn over it.
-            let rounded = NSBezierPath(roundedRect: selection, xRadius: 6, yRadius: 6)
+            let radius = Self.cornerRadius
+            let rounded = NSBezierPath(roundedRect: selection, xRadius: radius, yRadius: radius)
             context.saveGState()
-            context.addPath(CGPath(roundedRect: selection, cornerWidth: 6, cornerHeight: 6, transform: nil))
+            context.addPath(CGPath(roundedRect: selection, cornerWidth: radius, cornerHeight: radius, transform: nil))
             context.clip()
             context.draw(image, in: bounds)
             context.restoreGState()
+
+            drawGlow(around: selection, path: rounded)
 
             // Dark halo under an accent border: reads on bright and dark pixels.
             rounded.lineWidth = 4
@@ -94,6 +98,7 @@ final class RegionSelectionView: NSView {
             NSColor.controlAccentColor.setStroke()
             rounded.stroke()
 
+            drawHandles(for: selection)
             drawSizeChip(for: selection)
         }
 
@@ -104,6 +109,63 @@ final class RegionSelectionView: NSView {
     override func resetCursorRects() {
         addCursorRect(bounds, cursor: .crosshair)
     }
+
+    /// Soft accent glow, kept outside the border: clipping to everything but
+    /// the selection leaves the real pixels inside untinted.
+    private func drawGlow(around rect: NSRect, path: NSBezierPath) {
+        NSGraphicsContext.saveGraphicsState()
+        let outside = NSBezierPath(rect: bounds)
+        outside.append(path)
+        outside.windingRule = .evenOdd
+        outside.addClip()
+        let glow = NSShadow()
+        glow.shadowColor = NSColor.controlAccentColor.withAlphaComponent(0.75)
+        glow.shadowBlurRadius = 14
+        glow.shadowOffset = .zero
+        glow.set()
+        path.lineWidth = 2
+        NSColor.controlAccentColor.withAlphaComponent(0.6).setStroke()
+        path.stroke()
+        NSGraphicsContext.restoreGraphicsState()
+    }
+
+    /// Four corner handles, seated on the rounded corners' arcs. Skipped on a
+    /// selection too small to hold them without covering it.
+    private func drawHandles(for rect: NSRect) {
+        guard rect.width >= 24, rect.height >= 24 else { return }
+        // Where a 45° line from the corner meets a 6 pt corner arc.
+        let inset = Self.cornerRadius * (1 - 1 / 2.squareRoot())
+        let side: CGFloat = 8
+        let corners = [
+            CGPoint(x: rect.minX + inset, y: rect.minY + inset),
+            CGPoint(x: rect.maxX - inset, y: rect.minY + inset),
+            CGPoint(x: rect.minX + inset, y: rect.maxY - inset),
+            CGPoint(x: rect.maxX - inset, y: rect.maxY - inset)
+        ]
+        for corner in corners {
+            let dot = NSBezierPath(ovalIn: CGRect(
+                x: corner.x - side / 2,
+                y: corner.y - side / 2,
+                width: side,
+                height: side
+            ))
+            NSGraphicsContext.saveGraphicsState()
+            let shadow = NSShadow()
+            shadow.shadowColor = NSColor.black.withAlphaComponent(0.45)
+            shadow.shadowBlurRadius = 3
+            shadow.shadowOffset = NSSize(width: 0, height: -1)
+            shadow.set()
+            NSColor.white.setFill()
+            dot.fill()
+            NSGraphicsContext.restoreGraphicsState()
+            dot.lineWidth = 1.5
+            NSColor.controlAccentColor.setStroke()
+            dot.stroke()
+        }
+    }
+
+    /// Corner radius of the selection's punch-through and border.
+    private static let cornerRadius: CGFloat = 6
 
     /// Live `W × H` of the selection, parked beside it and kept on screen.
     private func drawSizeChip(for rect: NSRect) {

@@ -30,6 +30,8 @@ final class ColorPickerSession: NSObject {
     private var lensView: LensView?
     private var timer: Timer?
     private var hex: String?
+    /// The color behind `hex`, kept only to tint the copy toast's swatch.
+    private var color: NSColor?
     private var reportedCaptureFailure = false
 
     private override init() {
@@ -103,6 +105,7 @@ final class ColorPickerSession: NSObject {
         window = nil
         lensView = nil
         hex = nil
+        color = nil
         if Self.current === self {
             Self.current = nil
         }
@@ -113,6 +116,7 @@ final class ColorPickerSession: NSObject {
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()
             _ = pasteboard.setString(hex, forType: .string)
+            Toast.show("Copied \(hex)", leading: color.map(Toast.Leading.swatch) ?? .symbol("eyedropper"))
         }
         finish()
     }
@@ -165,6 +169,7 @@ final class ColorPickerSession: NSObject {
             blue: CGFloat(rgba.b) / 255,
             alpha: 1
         )
+        self.color = color
         view.show(image: lensImage, hex: hex, color: color, cursor: cursor)
     }
 

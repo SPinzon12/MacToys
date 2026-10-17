@@ -2,7 +2,8 @@ import AppKit
 import Carbon
 
 /// The overlay's content view: draws the magnifier lens (magnified pixels,
-/// crosshair, color swatch, HEX readout) and routes input back to the session.
+/// pixel grid, crosshair, color swatch, HEX + `rgb(...)` readout) and routes
+/// input back to the session.
 ///
 /// The view fills a window unioned over every display, so lens anchoring is
 /// clamped against the full desktop rather than one screen.
@@ -53,33 +54,37 @@ final class LensView: NSView {
         // physical pixels on both Retina (2×) and non-Retina displays.
         let pixelPoints = CGFloat(ColorPickerSpec.zoom) / scale
         let imageSize = CGFloat(ColorPickerSpec.samplePixels) * pixelPoints
-        let pad: CGFloat = 6
-        let gap: CGFloat = 8
-        let swatchSide: CGFloat = 24
+        let pad: CGFloat = 7
+        let gap: CGFloat = 9
+        let swatchSide: CGFloat = 34
         let lensWidth = imageSize + pad * 2
         let lensHeight = pad + imageSize + gap + swatchSide + pad
 
         // Anchor up-right of the cursor; flip to the other side at the desktop
         // edge, then clamp so the lens never leaves the (multi-display) bounds.
-        var origin = CGPoint(x: cursor.x + 12, y: cursor.y + 12)
+        var origin = CGPoint(x: cursor.x + 14, y: cursor.y + 14)
         if origin.x + lensWidth > bounds.maxX {
-            origin.x = cursor.x - 12 - lensWidth
+            origin.x = cursor.x - 14 - lensWidth
         }
         if origin.y + lensHeight > bounds.maxY {
-            origin.y = cursor.y - 12 - lensHeight
+            origin.y = cursor.y - 14 - lensHeight
         }
         origin.x = min(max(origin.x, bounds.minX), bounds.maxX - lensWidth)
         origin.y = min(max(origin.y, bounds.minY), bounds.maxY - lensHeight)
+        // Snap to device pixels: magnified pixels and grid lines then land on
+        // whole physical pixels instead of smearing across two.
+        origin.x = (origin.x * scale).rounded() / scale
+        origin.y = (origin.y * scale).rounded() / scale
 
         let lensRect = CGRect(x: origin.x, y: origin.y, width: lensWidth, height: lensHeight)
-        let card = NSBezierPath(roundedRect: lensRect, xRadius: 10, yRadius: 10)
+        let card = NSBezierPath(roundedRect: lensRect, xRadius: Self.cardRadius, yRadius: Self.cardRadius)
         NSGraphicsContext.saveGraphicsState()
         let shadow = NSShadow()
         shadow.shadowColor = NSColor.black.withAlphaComponent(0.45)
-        shadow.shadowBlurRadius = 14
-        shadow.shadowOffset = NSSize(width: 0, height: -4)
+        shadow.shadowBlurRadius = 16
+        shadow.shadowOffset = NSSize(width: 0, height: -5)
         shadow.set()
-        NSColor.black.withAlphaComponent(0.74).setFill()
+        NSColor.black.withAlphaComponent(0.76).setFill()
         card.fill()
         NSGraphicsContext.restoreGraphicsState()
         NSColor.white.withAlphaComponent(0.14).setStroke()
@@ -93,74 +98,144 @@ final class LensView: NSView {
             height: imageSize
         )
         guard let context = NSGraphicsContext.current?.cgContext else { return }
+        let imageClip = CGPath(
+            roundedRect: imageRect,
+            cornerWidth: Self.imageRadius,
+            cornerHeight: Self.imageRadius,
+            transform: nil
+        )
+        context.saveGState()
+        context.addPath(imageClip)
+        context.clip()
         // Nearest-neighbor: the lens must show hard pixel edges, not smoothing.
         context.interpolationQuality = .none
         context.draw(lensImage, in: imageRect)
-        NSColor.white.withAlphaComponent(0.35).setStroke()
-        NSBezierPath(rect: imageRect).stroke()
-
-        // Faint per-pixel grid: makes the sample granularity visible.
         if pixelPoints > 1 {
-            NSColor.white.withAlphaComponent(0.10).setStroke()
-            let grid = NSBezierPath()
-            var gx = imageRect.minX + pixelPoints
-            while gx < imageRect.maxX - 0.5 {
-                grid.move(to: CGPoint(x: gx, y: imageRect.minY))
-                grid.line(to: CGPoint(x: gx, y: imageRect.maxY))
-                gx += pixelPoints
-            }
-            var gy = imageRect.minY + pixelPoints
-            while gy < imageRect.maxY - 0.5 {
-                grid.move(to: CGPoint(x: imageRect.minX, y: gy))
-                grid.line(to: CGPoint(x: imageRect.maxX, y: gy))
-                gy += pixelPoints
-            }
-            grid.lineWidth = 0.5
-            grid.stroke()
+            drawPixelGrid(in: imageRect, pixelPoints: pixelPoints, scale: scale)
         }
+        drawCrosshair(in: imageRect, pixelPoints: pixelPoints)
+        context.restoreGState()
 
-        // Crosshair centered on the sampled pixel: dark outline under a light
-        // core, so it reads on both dark and bright lens content.
-        let center = CGPoint(x: imageRect.midX, y: imageRect.midY)
-        let horizontal = NSBezierPath()
-        horizontal.move(to: CGPoint(x: imageRect.minX, y: center.y))
-        horizontal.line(to: CGPoint(x: imageRect.maxX, y: center.y))
-        let vertical = NSBezierPath()
-        vertical.move(to: CGPoint(x: center.x, y: imageRect.minY))
-        vertical.line(to: CGPoint(x: center.x, y: imageRect.maxY))
-        for path in [horizontal, vertical] {
+        let imageBorder = NSBezierPath(
+            roundedRect: imageRect.insetBy(dx: 0.25, dy: 0.25),
+            xRadius: Self.imageRadius,
+            yRadius: Self.imageRadius
+        )
+        imageBorder.lineWidth = 0.5
+        NSColor.white.withAlphaComponent(0.3).setStroke()
+        imageBorder.stroke()
+
+        drawReadout(origin: CGPoint(x: origin.x + pad, y: origin.y + pad), swatchSide: swatchSide)
+
+        drawHint()
+    }
+
+    private static let cardRadius: CGFloat = 12
+    private static let imageRadius: CGFloat = 7
+
+    /// Per-pixel grid, one physical pixel wide and centered on a physical pixel
+    /// so it renders hard instead of as a two-pixel blur. A dark line under a
+    /// faint light one keeps it visible on bright and dark content alike.
+    private func drawPixelGrid(in rect: CGRect, pixelPoints: CGFloat, scale: CGFloat) {
+        let hairline = 1 / scale
+        let offset = hairline / 2
+        let grid = NSBezierPath()
+        var gx = rect.minX + pixelPoints
+        while gx < rect.maxX - 0.5 {
+            grid.move(to: CGPoint(x: gx + offset, y: rect.minY))
+            grid.line(to: CGPoint(x: gx + offset, y: rect.maxY))
+            gx += pixelPoints
+        }
+        var gy = rect.minY + pixelPoints
+        while gy < rect.maxY - 0.5 {
+            grid.move(to: CGPoint(x: rect.minX, y: gy + offset))
+            grid.line(to: CGPoint(x: rect.maxX, y: gy + offset))
+            gy += pixelPoints
+        }
+        grid.lineWidth = hairline
+        NSColor.black.withAlphaComponent(0.22).setStroke()
+        grid.stroke()
+        NSColor.white.withAlphaComponent(0.07).setStroke()
+        grid.stroke()
+    }
+
+    /// Crosshair arms that stop short of the sampled pixel, plus a ring around
+    /// that pixel: dark outline under a light core, so it reads everywhere.
+    private func drawCrosshair(in rect: CGRect, pixelPoints: CGFloat) {
+        let half = CGFloat(ColorPickerSpec.samplePixels / 2)
+        let cell = CGRect(
+            x: rect.minX + half * pixelPoints,
+            y: rect.minY + half * pixelPoints,
+            width: pixelPoints,
+            height: pixelPoints
+        )
+        let arms = NSBezierPath()
+        arms.move(to: CGPoint(x: rect.minX, y: cell.midY))
+        arms.line(to: CGPoint(x: cell.minX - 2, y: cell.midY))
+        arms.move(to: CGPoint(x: cell.maxX + 2, y: cell.midY))
+        arms.line(to: CGPoint(x: rect.maxX, y: cell.midY))
+        arms.move(to: CGPoint(x: cell.midX, y: rect.minY))
+        arms.line(to: CGPoint(x: cell.midX, y: cell.minY - 2))
+        arms.move(to: CGPoint(x: cell.midX, y: cell.maxY + 2))
+        arms.line(to: CGPoint(x: cell.midX, y: rect.maxY))
+        let ring = NSBezierPath(rect: cell.insetBy(dx: -1, dy: -1))
+        for path in [arms, ring] {
             path.lineWidth = 3
-            NSColor.black.withAlphaComponent(0.85).setStroke()
+            NSColor.black.withAlphaComponent(0.8).setStroke()
             path.stroke()
             path.lineWidth = 1
             NSColor.white.setStroke()
             path.stroke()
         }
+    }
 
-        // Swatch + HEX readout under the lens image.
-        let rowY = origin.y + pad
-        let swatchRect = CGRect(x: origin.x + pad, y: rowY, width: swatchSide, height: swatchSide)
-        let swatch = NSBezierPath(roundedRect: swatchRect, xRadius: 5, yRadius: 5)
+    /// Swatch (rounded, bordered, lifted by a soft shadow) beside the HEX and a
+    /// secondary `rgb(r, g, b)` line.
+    private func drawReadout(origin: CGPoint, swatchSide: CGFloat) {
+        let swatchRect = CGRect(x: origin.x, y: origin.y, width: swatchSide, height: swatchSide)
+        let swatch = NSBezierPath(roundedRect: swatchRect, xRadius: 8, yRadius: 8)
+        NSGraphicsContext.saveGraphicsState()
+        let shadow = NSShadow()
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.5)
+        shadow.shadowBlurRadius = 5
+        shadow.shadowOffset = NSSize(width: 0, height: -1.5)
+        shadow.set()
         color.setFill()
         swatch.fill()
-        NSColor.white.withAlphaComponent(0.45).setStroke()
-        swatch.lineWidth = 0.5
-        swatch.stroke()
-
-        let font = NSFont.monospacedDigitSystemFont(ofSize: 16, weight: .semibold)
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .foregroundColor: NSColor.white
-        ]
-        // NSFont has no lineHeight on AppKit; ascender − descender is close enough to center.
-        let textHeight = font.ascender - font.descender
-        let textY = rowY + (swatchSide - textHeight) / 2
-        (hex as NSString).draw(
-            at: CGPoint(x: swatchRect.maxX + 8, y: textY),
-            withAttributes: attributes
+        NSGraphicsContext.restoreGraphicsState()
+        let swatchBorder = NSBezierPath(
+            roundedRect: swatchRect.insetBy(dx: 0.25, dy: 0.25),
+            xRadius: 8,
+            yRadius: 8
         )
+        swatchBorder.lineWidth = 0.5
+        NSColor.white.withAlphaComponent(0.5).setStroke()
+        swatchBorder.stroke()
 
-        drawHint()
+        let hexFont = NSFont.monospacedDigitSystemFont(ofSize: 15, weight: .semibold)
+        let rgbFont = NSFont.monospacedSystemFont(ofSize: 10.5, weight: .medium)
+        let textX = swatchRect.maxX + 9
+        // NSFont has no lineHeight on AppKit; ascender − descender is close enough.
+        let hexHeight = hexFont.ascender - hexFont.descender
+        let rgbHeight = rgbFont.ascender - rgbFont.descender
+        let lineGap: CGFloat = 1
+        let blockY = swatchRect.midY - (hexHeight + lineGap + rgbHeight) / 2
+        (rgbText as NSString).draw(
+            at: CGPoint(x: textX, y: blockY),
+            withAttributes: [.font: rgbFont, .foregroundColor: NSColor.white.withAlphaComponent(0.6)]
+        )
+        (hex as NSString).draw(
+            at: CGPoint(x: textX, y: blockY + rgbHeight + lineGap),
+            withAttributes: [.font: hexFont, .foregroundColor: NSColor.white]
+        )
+    }
+
+    /// `rgb(r, g, b)` of the sampled color. The session builds it from exact
+    /// 8-bit sRGB values, so rounding the components recovers them exactly.
+    private var rgbText: String {
+        guard let srgb = color.usingColorSpace(.sRGB) else { return "" }
+        func byte(_ component: CGFloat) -> Int { Int((component * 255).rounded()) }
+        return "rgb(\(byte(srgb.redComponent)), \(byte(srgb.greenComponent)), \(byte(srgb.blueComponent)))"
     }
 
     /// Bottom-center hint. The lens follows the cursor, so a fixed hint never
