@@ -1,52 +1,85 @@
 import AppKit
 
-/// ⌃⇧V flow: snapshot the clipboard → pop a menu of valid transforms at the
-/// cursor → run the chosen transform → write the payload to the pasteboard →
-/// synthesize ⌘V into whichever app had focus before the menu opened.
+/// ⌃⇧V flow: open the Spotlight-style clipboard history → the user picks an
+/// entry (paste as-is) or one of its transforms → write the payload to the
+/// pasteboard → synthesize ⌘V into whichever app had focus before the panel.
 @MainActor
 final class PasteCoordinator: NSObject {
     static let shared = PasteCoordinator()
+
+    private let history = ClipboardHistoryService.shared
 
     private override init() {
         super.init()
     }
 
     func showMenu() async {
-        let content = readClipboard()
-        let transforms = PasteTransform.available(for: content)
-        guard !transforms.isEmpty else {
-            presentAlert(
-                "Nothing to transform",
-                "The clipboard has no content Advanced Paste can transform."
-            )
-            return
-        }
+        history.poll() // a copy made a moment ago is already listed
         // The panel activates us; ⌘V must land back in the app that had focus.
         let previousApp = NSWorkspace.shared.frontmostApplication
 
         let picked = await PastePanelController.shared.present(
-            rows: transforms.map { PasteRowModel($0) },
-            preview: preview(for: content)
+            history: history.history,
+            contentFor: { [history] in Self.content(for: $0, imageData: history.imageData(for: $0)) },
+            imageData: { [history] in history.imageData(for: $0) }
         )
         previousApp?.activate() // give focus back, picked or dismissed
 
-        guard let transform = picked else { return } // dismissed without a pick
-        await execute(transform, content: content)
+        switch picked {
+        case nil:
+            return // dismissed without a pick
+        case .entry(let entry):
+            guard writeOriginal(entry) else {
+                presentAlert("Paste failed", "This clipboard item is no longer available.")
+                return
+            }
+            history.promote(entry)
+            await paste()
+        case .transform(let entry, let transform):
+            let content = Self.content(for: entry, imageData: history.imageData(for: entry))
+            await execute(transform, content: content)
+        }
     }
 
-    /// One-line clipboard summary for the panel's header chip.
-    private func preview(for content: ClipboardContent) -> String {
-        if let text = content.text, !text.isEmpty {
-            let collapsed = text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
-            return collapsed.count > 60 ? String(collapsed.prefix(60)) + "…" : collapsed
+    /// Rebuilds the transform input from a history entry.
+    private static func content(for entry: ClipboardEntry, imageData: Data?) -> ClipboardContent {
+        var content = ClipboardContent(text: entry.text, html: entry.html, fileURLs: entry.fileURLs)
+        if entry.kind == .image, let imageData, let rep = NSBitmapImageRep(data: imageData) {
+            content.image = rep.cgImage
         }
-        if let image = content.image { return "Image \(image.width)×\(image.height)" }
-        if let file = content.fileURLs.first {
-            let extra = content.fileURLs.count > 1 ? " +\(content.fileURLs.count - 1)" : ""
-            return file.lastPathComponent + extra
+        return content
+    }
+
+    /// Puts the entry back on the pasteboard exactly as it was recorded.
+    private func writeOriginal(_ entry: ClipboardEntry) -> Bool {
+        let pasteboard = NSPasteboard.general
+        switch entry.kind {
+        case .text:
+            guard let text = entry.text else { return false }
+            pasteboard.clearContents()
+            pasteboard.setString(text, forType: .string)
+            if let html = entry.html { pasteboard.setString(html, forType: .html) }
+        case .image:
+            guard let png = history.imageData(for: entry) else { return false }
+            pasteboard.clearContents()
+            pasteboard.setData(png, forType: .png)
+            if let tiff = NSBitmapImageRep(data: png)?.tiffRepresentation {
+                pasteboard.setData(tiff, forType: .tiff) // apps that read TIFF only
+            }
+        case .files:
+            let existing = entry.fileURLs.filter { FileManager.default.fileExists(atPath: $0.path) }
+            guard !existing.isEmpty else { return false }
+            pasteboard.clearContents()
+            pasteboard.writeObjects(existing.map { $0 as NSURL })
         }
-        if content.hasHTML { return "HTML" }
-        return "Empty"
+        history.ignoreOwnWrite()
+        return true
+    }
+
+    private func paste() async {
+        // A beat for focus to settle in the previous app before ⌘V lands.
+        try? await Task.sleep(nanoseconds: 150_000_000)
+        SyntheticPaste.send()
     }
 
     // MARK: - Execution
@@ -60,9 +93,8 @@ final class PasteCoordinator: NSObject {
             return
         }
         write(payload)
-        // A beat for focus to settle in the previous app before ⌘V lands.
-        try? await Task.sleep(nanoseconds: 150_000_000)
-        SyntheticPaste.send()
+        history.ignoreOwnWrite() // derived output, not a new copy
+        await paste()
     }
 
     private func write(_ payload: PastePayload) {
@@ -82,21 +114,6 @@ final class PasteCoordinator: NSObject {
         case .file(let url):
             pasteboard.writeObjects([url as NSURL])
         }
-    }
-
-    private func readClipboard() -> ClipboardContent {
-        let pasteboard = NSPasteboard.general
-        var content = ClipboardContent()
-        content.text = pasteboard.string(forType: .string)
-        content.html = pasteboard.string(forType: .html)
-        if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL] {
-            content.fileURLs = urls.filter(\.isFileURL)
-        }
-        if let data = pasteboard.data(forType: .png) ?? pasteboard.data(forType: .tiff),
-           let rep = NSBitmapImageRep(data: data) {
-            content.image = rep.cgImage
-        }
-        return content
     }
 
     private func presentAlert(_ title: String, _ message: String) {

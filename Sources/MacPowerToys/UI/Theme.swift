@@ -11,6 +11,27 @@ enum Theme {
         static let panel: CGFloat = 12
         static let row: CGFloat = 8
         static let chip: CGFloat = 6
+        /// The Spotlight-style clipboard panel; Liquid Glass wants generous corners.
+        static let spotlight: CGFloat = 20
+        static let keycap: CGFloat = 4
+    }
+
+    /// Clipboard panel geometry (T8): a fixed frame keeps the panel from
+    /// jumping while the list filters.
+    enum Spotlight {
+        static let width: CGFloat = 720
+        static let height: CGFloat = 460
+        static let listWidth: CGFloat = 300
+        static let searchHeight: CGFloat = 54
+        static let footerHeight: CGFloat = 32
+        static let rowHeight: CGFloat = 34
+    }
+
+    enum Motion {
+        static let appear = Animation.easeOut(duration: 0.12)
+        static let selection = Animation.easeOut(duration: 0.08)
+        static let appearDuration: TimeInterval = 0.12
+        static let dismissDuration: TimeInterval = 0.09
     }
 
     enum Space {
@@ -56,6 +77,17 @@ enum Theme {
             startPoint: .top,
             endPoint: .bottom
         )
+    }
+
+    /// Selected row: a quiet accent wash plus a 1 pt accent edge.
+    static func selectionFill(_ scheme: ColorScheme) -> Color {
+        accent.opacity(scheme == .light ? 0.16 : 0.26)
+    }
+
+    static let selectionBorder = accent.opacity(0.55)
+
+    static func keycapFill(_ scheme: ColorScheme) -> Color {
+        scheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.10)
     }
 
     static let shadowColor = Color.black.opacity(0.34)
