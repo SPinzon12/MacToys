@@ -46,3 +46,18 @@ work checked with real-window screenshots (no UI test runner on this toolchain).
   old PID). Logo approved and applied.
 - 2026-10-17: panel done; paused for user feedback before U3 onboarding / U4
   Settings (big visual change — feedback first).
+- 2026-10-17 user (verbatim): "aveces veo un pantalla roja en los permisos" →
+  cause: system accent is red (AppleAccentColor 0) and the UI used it; fixed with a
+  brand accent (logo indigo-violet) + orange for attention (5a4bd21).
+- Panel verifier: FAIL 1 blocker — Text Extractor captured the fading panel. Fixed:
+  close(animated: false) + CATransaction.flush (measured: region diff 0.315 → 0.000),
+  close on resign-key, Esc scoped to the panel, VoiceOver label, login pending state
+  (6e158d8).
+- 2026-10-17 user (verbatim): "y mejores el ui del color picker esta muy basico no me
+  gusto. lo de mas super y tambien cuando haga click en clipboard me apreca el
+  historial. y por algun motivo hay bordes negros por fuera y me gusto el color. y no
+  ue hiciste pero el color morado bacano tal vez usar el color qeu tenga el sistema"
+  → black square corners: glass clipped to radius (3f8e01a); Clipboard card opened
+  the history unfocused (reproduced key:false) → non-activating key panel (e8ca3ba);
+  Color Picker redesign: round loupe + color ring + HEX/RGB/HSL (833eb4b, 6 tests).
+  Open question to user: brand purple vs system accent.
