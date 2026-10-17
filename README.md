@@ -183,8 +183,8 @@ rendering and a single accent color. Tokens live in
 in, keycap footer, animated selection); the two screen overlays stay AppKit and
 paint the same language (rounded accent selection with corner handles and an
 outer glow, glass lens card with a crisp pixel grid, swatch, hex and rgb).
-Copying from the Color Picker or Text Extractor shows a small glass toast
-(`Copied #1E90FF`, `Copied 42 chars`).
+Copying from the Text Extractor shows a small glass toast (`Copied 42 chars`); the
+Color Picker shows its result card instead.
 
 The idiom is inspired by a reference macOS menu-bar app; the tokens are
 self-authored — that project is GPL and no code was copied from it.
