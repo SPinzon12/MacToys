@@ -6,7 +6,7 @@ A small macOS menu-bar app with quick clipboard and screen utilities behind glob
 hotkeys — ported from [microsoft/PowerToys](https://github.com/microsoft/PowerToys)
 to the Mac:
 
-- **Color Picker** — zoom lens → click → copy HEX.
+- **Color Picker** — a round loupe on the cursor → click → copy HEX, RGB or HSL.
 - **Text Extractor** — drag a region or click a word → OCR → clipboard.
 - **Clipboard history + Advanced Paste** — a Spotlight-style panel behind ⌃⇧V:
   search everything you copied, paste it back, or paste it as plain text, OCR,
@@ -62,10 +62,12 @@ All four tasks are done.
 
 T1 delivers the skeleton: menu-bar status item, global hotkey registration,
 permission preflight, and module stubs. T2 delivers the Color Picker: **⌃⇧C**
-opens a magnified lens that follows the cursor; left-click copies the pixel
-under the cursor as `#RRGGBB` to the clipboard, Esc or right-click cancels
-(re-pressing the hotkey also cancels). It needs the **Screen Recording**
-permission — without it, one alert explains where to grant it.
+opens a round loupe centered on the cursor — 10× magnified pixels with a pixel
+grid, the sampled pixel outlined, and a ring painted in the color under it. A
+glass card below shows the value in **HEX**, **RGB** or **HSL**: **⇥** / **← →**
+switch the format (remembered for next time), click or **⏎** copies it, Esc or
+right-click cancels (re-pressing the hotkey also cancels). It needs the **Screen
+Recording** permission — without it, an alert opens the Permissions window.
 
 T3 delivers the Text Extractor: **⌃⇧O** captures the main display once and
 shows it dimmed behind an overlay. Drag a rectangle to OCR that region into

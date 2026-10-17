@@ -6,8 +6,8 @@ enum ColorPickerSpec {
     /// Neighborhood sampled around the cursor. Odd on purpose: the cursor pixel
     /// is exactly at index `samplePixels / 2`.
     static let samplePixels = 25
-    /// Magnification in physical screen pixels (8×).
-    static let zoom = 8
+    /// Magnification in physical screen pixels (10×: a 125 pt loupe on Retina).
+    static let zoom = 10
 }
 
 /// One Color Picker overlay session: a borderless window spanning every display,
@@ -29,9 +29,10 @@ final class ColorPickerSession: NSObject {
     private var window: OverlayWindow?
     private var lensView: LensView?
     private var timer: Timer?
-    private var hex: String?
-    /// The color behind `hex`, kept only to tint the copy toast's swatch.
+    /// Last sampled color, kept only to tint the copy toast's swatch.
     private var color: NSColor?
+    /// The loupe marks the pixel itself, so the arrow would only cover it.
+    private var cursorHidden = false
     private var reportedCaptureFailure = false
 
     private override init() {
@@ -83,6 +84,8 @@ final class ColorPickerSession: NSObject {
         NSApp.activate()
         window.makeKeyAndOrderFront(nil)
         _ = window.makeFirstResponder(view) // Esc lands in keyDown
+        NSCursor.hide()
+        cursorHidden = true
 
         let timer = Timer(
             timeInterval: 1.0 / 60.0,
@@ -104,19 +107,23 @@ final class ColorPickerSession: NSObject {
         window?.orderOut(nil)
         window = nil
         lensView = nil
-        hex = nil
         color = nil
+        if cursorHidden { // balanced: hide/unhide are counted by AppKit
+            NSCursor.unhide()
+            cursorHidden = false
+        }
         if Self.current === self {
             Self.current = nil
         }
     }
 
+    /// Copies the value in the format selected in the lens (HEX, RGB or HSL).
     private func pick() {
-        if let hex {
+        if color != nil, let value = lensView?.currentValue {
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()
-            _ = pasteboard.setString(hex, forType: .string)
-            Toast.show("Copied \(hex)", leading: color.map(Toast.Leading.swatch) ?? .symbol("eyedropper"))
+            _ = pasteboard.setString(value, forType: .string)
+            Toast.show("Copied \(value)", leading: color.map(Toast.Leading.swatch) ?? .symbol("eyedropper"))
         }
         finish()
     }
@@ -161,8 +168,6 @@ final class ColorPickerSession: NSObject {
             return
         }
 
-        let hex = String(format: "#%02X%02X%02X", rgba.r, rgba.g, rgba.b)
-        self.hex = hex
         let color = NSColor(
             srgbRed: CGFloat(rgba.r) / 255,
             green: CGFloat(rgba.g) / 255,
@@ -170,7 +175,7 @@ final class ColorPickerSession: NSObject {
             alpha: 1
         )
         self.color = color
-        view.show(image: lensImage, hex: hex, color: color, cursor: cursor)
+        view.show(image: lensImage, rgb: (rgba.r, rgba.g, rgba.b), cursor: cursor)
     }
 
     /// AppKit's origin is the bottom-left of the primary screen; CG global
