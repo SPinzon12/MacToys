@@ -60,4 +60,5 @@ work checked with real-window screenshots (no UI test runner on this toolchain).
   → black square corners: glass clipped to radius (3f8e01a); Clipboard card opened
   the history unfocused (reproduced key:false) → non-activating key panel (e8ca3ba);
   Color Picker redesign: round loupe + color ring + HEX/RGB/HSL (833eb4b, 6 tests).
-  Open question to user: brand purple vs system accent.
+  Accent decision — user chose "Morado MacToys (Recommended)": always the logo
+  purple (Theme.accentNS), not the system accent. Already in place (5a4bd21).
