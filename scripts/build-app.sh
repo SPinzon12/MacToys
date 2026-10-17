@@ -40,6 +40,7 @@ sed -e "s/__BUNDLE_ID__/$BUNDLE_ID/" -e "s/__VERSION__/$VERSION/" -e "s/__BUILD_
     "$ROOT/Packaging/Info.plist" > "$APP/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist" >/dev/null
 printf 'APPL????' > "$APP/Contents/PkgInfo"
+cp "$ROOT/THIRD_PARTY_NOTICES.md" "$APP/Contents/Resources/"
 
 echo "==> Rendering icon"
 rm -rf "$WORK/AppIcon.iconset"

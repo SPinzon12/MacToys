@@ -4,6 +4,26 @@ A personal macOS menu-bar utility ("my PowerToys"): three quick clipboard/screen
 utilities from [microsoft/PowerToys](https://github.com/microsoft/PowerToys) ported
 to the Mac behind global hotkeys.
 
+## Install
+
+1. Download `MacPowerToys-<version>.dmg` (or the `.zip`) from the releases page and
+   check it against `SHA256SUMS` if you like: `shasum -a 256 -c SHA256SUMS`.
+2. Open the disk image and drag **Mac PowerToys** onto **Applications**.
+3. First launch: this build is **not notarized by Apple** yet, so macOS blocks a
+   plain double-click. Open it once with **right-click → Open → Open**, or allow it
+   under **System Settings → Privacy & Security → Open Anyway**. (Terminal
+   alternative: `xattr -dr com.apple.quarantine "/Applications/Mac PowerToys.app"`.)
+4. A wand icon appears in the menu bar (no Dock icon). Grant the two permissions it
+   asks for — see [Required macOS permissions](#required-macos-permissions) — and
+   relaunch it.
+5. Optional: **Launch at Login** in the menu-bar menu starts it with your Mac.
+
+Requires macOS 14 or later; runs natively on Apple silicon and Intel.
+
+Updating: replace the app in Applications. Because this build is ad-hoc signed,
+macOS treats each new version as a new app and asks for the permissions again —
+remove the old **Mac PowerToys** entries in Privacy & Security and grant them anew.
+
 - **Color Picker** — zoom lens → click → copy HEX.
 - **Text Extractor** — drag a region or click a word → OCR → clipboard.
 - **Clipboard history + Advanced Paste** — a Spotlight-style panel behind ⌃⇧V:
@@ -136,7 +156,26 @@ swift build
 swift run mac-powertoys
 ```
 
-Quit from the status-item menu (⌘Q).
+Quit from the status-item menu (⌘Q). Under `swift run` there is no app bundle:
+the menu shows "Development build" and Launch at Login is disabled.
+
+## Build a release
+
+```sh
+scripts/build-app.sh        # dist/Mac PowerToys.app (universal, ad-hoc signed)
+scripts/package-release.sh  # + dist/MacPowerToys-<version>.zip / .dmg / SHA256SUMS
+```
+
+The version comes from `VERSION`; the build number defaults to the git commit
+count. Overrides: `ARCHS` (default `arm64 x86_64`), `BUNDLE_ID` (default
+`dev.spinzon12.MacPowerToys`), `BUILD_NUMBER`, `SIGN_IDENTITY` (default `-`,
+ad-hoc). The app icon is rendered from `scripts/make-icon.swift` at build time.
+
+With a **Developer ID Application** certificate, pass it as `SIGN_IDENTITY` and
+notarize the result (`xcrun notarytool submit … --wait`, then
+`xcrun stapler staple`) so downloads open without the first-launch workaround and
+keep their permissions across updates. Notarization needs an Apple Developer
+account; this repository does not do it yet.
 
 ## Required macOS permissions
 
@@ -152,8 +191,9 @@ Steps:
 1. Launch the app once — it shows a single alert listing any missing permission
    and can open the right pane for you.
 2. Or open **System Settings → Privacy & Security → Screen Recording** and enable
-   your terminal app (Terminal/iTerm) or `mac-powertoys` — a bare executable run
-   from a terminal is attributed to the process that launched it.
+   **Mac PowerToys**. When running from source (`swift run`), enable your terminal
+   app (Terminal/iTerm) instead — a bare executable run from a terminal is
+   attributed to the process that launched it.
 3. Open **System Settings → Privacy & Security → Accessibility** and enable the
    same entry.
 4. Relaunch the app — macOS caches these checks at launch.
@@ -186,6 +226,9 @@ Sources/MacPowerToys/
   AdvancedPaste/          coordinator + pure transforms (tested) + ⌘V paste
     History/              clipboard history: capture rules, store, poller
 Tests/MacPowerToysTests/  swift-testing suites for transforms + history
+Packaging/Info.plist      app bundle Info.plist template
+scripts/                  build-app.sh, package-release.sh, make-icon.swift
+VERSION                   release version (CFBundleShortVersionString)
 ```
 
 Run the tests with:
