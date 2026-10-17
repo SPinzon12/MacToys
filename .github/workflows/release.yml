@@ -21,7 +21,7 @@ jobs:
 
       - name: Select the newest Xcode
         run: |
-          XCODE="$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+          XCODE="$(ls -d /Applications/Xcode*.app | grep -vi beta | sort -V | tail -1)"
           sudo xcode-select -s "$XCODE"
           swift --version
 

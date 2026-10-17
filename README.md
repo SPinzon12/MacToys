@@ -41,8 +41,10 @@ Requires macOS 14 or later; runs natively on Apple silicon and Intel.
 Updating: replace the app in Applications. Because this build is ad-hoc signed,
 macOS treats each new version as a new app and asks for the permissions again —
 remove the old **MacToys** entries in Privacy & Security and grant them anew.
-Coming from the earlier "Mac PowerToys" build: its clipboard history moves over
-automatically on first launch; remove its old permission entries the same way.
+Coming from the earlier "Mac PowerToys" build: quit it, turn off its Launch at
+Login, and delete "Mac PowerToys.app" — otherwise both apps run and watch the
+clipboard. Its clipboard history moves over to MacToys automatically on first
+launch; remove its old permission entries the same way.
 
 ## Status
 
@@ -162,8 +164,8 @@ Toolchain note: this CommandLineTools-only environment ships **no
 
 ## Build & run
 
-Requires macOS 14+ and the Swift toolchain (Swift 6.4 / CommandLineTools — no Xcode
-project involved).
+Requires macOS 14+ and a Swift 6 toolchain with the macOS 26 SDK or newer (Xcode
+26+, or just its CommandLineTools — no Xcode project involved).
 
 ```sh
 swift build
@@ -245,7 +247,7 @@ Sources/MacToys/
   TextExtractor/          Text Extractor overlay (session + selection + OCR)
   AdvancedPaste/          coordinator + pure transforms (tested) + ⌘V paste
     History/              clipboard history: capture rules, store, poller
-Tests/MacToysTests/  swift-testing suites for transforms + history
+Tests/MacToysTests/       swift-testing suites for transforms + history
 Packaging/Info.plist      app bundle Info.plist template
 scripts/                  build-app.sh, package-release.sh, make-icon.swift
 VERSION                   release version (CFBundleShortVersionString)

@@ -17,7 +17,7 @@ jobs:
       # The panel uses NSGlassEffectView, which needs the macOS 26 SDK or newer.
       - name: Select the newest Xcode
         run: |
-          XCODE="$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+          XCODE="$(ls -d /Applications/Xcode*.app | grep -vi beta | sort -V | tail -1)"
           sudo xcode-select -s "$XCODE"
           xcodebuild -version
           swift --version
