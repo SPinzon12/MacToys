@@ -177,17 +177,14 @@ final class TextExtractorSession: NSObject {
             Toast.show(missMessage, leading: .symbol("text.viewfinder"))
             return
         }
-        switch verdict {
-        case .superseded:
-            return
-        case .clipboardChanged:
-            // Also replaces a "Recognizing text…" pill that would otherwise linger.
+        guard verdict == .deliver else {
+            // .clipboardChanged — also replaces a "Recognizing text…" pill that would linger.
             Toast.show("Kept your newer copy", leading: .symbol("doc.on.clipboard"))
-        case .deliver:
-            pasteboard.clearContents()
-            _ = pasteboard.setString(text, forType: .string)
-            Toast.show(confirmation, leading: .symbol("text.viewfinder"))
+            return
         }
+        pasteboard.clearContents()
+        _ = pasteboard.setString(text, forType: .string)
+        Toast.show(confirmation, leading: .symbol("text.viewfinder"))
     }
 
     /// View rect (y-up, origin bottom-left) → image pixels (y-down, origin top-left).
