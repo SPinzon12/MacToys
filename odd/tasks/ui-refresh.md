@@ -28,7 +28,10 @@ work checked with real-window screenshots (no UI test runner on this toolchain).
 - [x] U1 — S3 toy-blocks icon + menu-bar glyph. Preview shown; user: "Aprobado,
        usalo". Route: inline. DONE: make-icon.swift Blocks drawing, BrandGlyph
        template image; icon extracted from the built bundle and checked.
-- [ ] U2 — S4 glass menu-bar panel. Route: inline.
+- [x] U2 — S4 glass menu-bar panel. Route: inline. DONE ce64fa3 (shared
+       GlassSurface) + 026d241 (MenuPanel, AppDelegate without NSMenu); 89 tests
+       (3 new label helpers); both states screenshot-checked (footer wrap fixed).
+       Pending: independent verifier (item 6), user smoke of click/Esc/outside-close.
 - [ ] U3 — S5 onboarding. Route: inline.
 - [ ] U4 — S6 Settings window. Route: inline.
 
@@ -41,3 +44,5 @@ work checked with real-window screenshots (no UI test runner on this toolchain).
   `swift run` works; the .app path is the broken one.
 - 2026-10-17: permissions verifier PASS (advisory applied: relaunch waits for the
   old PID). Logo approved and applied.
+- 2026-10-17: panel done; paused for user feedback before U3 onboarding / U4
+  Settings (big visual change — feedback first).
