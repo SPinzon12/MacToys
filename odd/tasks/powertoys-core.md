@@ -169,7 +169,12 @@ item, Carbon `RegisterEventHotKey` for globals, one coordinator + one module per
        Advisories applied in 562b495 (snapshot race re-check, 0700 on existing
        folder + test, ⌃⇧V toggles the open panel). 58/58 green. Not applied:
        legacy password-manager markers, orphan-PNG sweep, ⌘digit on AZERTY.
-       Native review: consent requested (lenses risk + reliability).
+       Native review (risk + reliability, granted): APPROVED and acknowledged,
+       lineage review-81784e6f020bcc80, authority burned. 8 non-blocking
+       advisories kept as later work: legacy secret markers, history in Time
+       Machine backups, silent Clear failure, corrupt-index silent loss,
+       main-thread disk I/O, image decode on selection, text-over-image narrowing,
+       panel/service logic untested.
 
 - [ ] T7 (proposed, not authorized) — Ship as a real `.app` bundle: icon, Info.plist,
        login item, and permissions attached to the app instead of the launching
@@ -216,3 +221,5 @@ branch/PR strategy decided only if a remote appears).
   (disjoint surfaces), T8 + T6 (a–e,h) inline. Commits 34a6b00, fea43b1, 6bac35a.
   57 tests green. Pending: independent verifier (item 2), native review, user
   visual smoke.
+- 2026-10-16: native review approved + acknowledged (34a6b00..8cdcf20). Next:
+  user visual smoke of ⌃⇧V panel, toasts and overlays.
