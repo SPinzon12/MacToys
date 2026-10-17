@@ -1,5 +1,5 @@
 import Testing
-@testable import MacPowerToys
+@testable import MacToys
 
 /// The version line shown in the status menu.
 struct AppVersionTests {

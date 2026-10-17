@@ -47,7 +47,7 @@ enum LaunchAtLogin {
         alert.informativeText = """
         \(error.localizedDescription)
 
-        You can also add Mac PowerToys under System Settings → General → Login Items.
+        You can also add MacToys under System Settings → General → Login Items.
         """
         alert.addButton(withTitle: "OK")
         NSApp.activate()

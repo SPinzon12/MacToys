@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import MacPowerToys
+@testable import MacToys
 
 /// CSV → JSON: header row maps every record into `{"col": "val", ...}`.
 struct CSVToJSONTests {

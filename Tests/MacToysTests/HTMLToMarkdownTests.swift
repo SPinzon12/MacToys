@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import MacPowerToys
+@testable import MacToys
 
 /// HTML → Markdown: the supported subset only; everything else is stripped
 /// to its text. Malformed input must never crash.

@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 import CoreGraphics
-@testable import MacPowerToys
+@testable import MacToys
 
 /// Which transforms the ⌃⇧V menu offers for a given clipboard snapshot.
 struct MenuValidityTests {

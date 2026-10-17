@@ -1,5 +1,5 @@
 import Testing
-@testable import MacPowerToys
+@testable import MacToys
 
 /// When a finished Text Extractor OCR may still write the clipboard.
 struct ExtractionGateTests {

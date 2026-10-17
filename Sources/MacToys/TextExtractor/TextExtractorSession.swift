@@ -232,7 +232,7 @@ final class TextExtractorSession: NSObject {
         alert.informativeText = """
         The Text Extractor needs Screen Recording access to capture the screen \
         for OCR. Grant it under System Settings → Privacy & Security → Screen \
-        Recording, then relaunch Mac PowerToys.
+        Recording, then relaunch MacToys.
         """
         alert.addButton(withTitle: "Open Settings")
         alert.addButton(withTitle: "OK")

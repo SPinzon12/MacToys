@@ -10,7 +10,23 @@ struct ClipboardHistoryStore {
 
     static var standard: ClipboardHistoryStore {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        return ClipboardHistoryStore(directory: support.appendingPathComponent("MacPowerToys", isDirectory: true))
+        let directory = support.appendingPathComponent("MacToys", isDirectory: true)
+        // The app shipped as "Mac PowerToys" before; its saved history moves along.
+        migrateLegacyDirectory(from: support.appendingPathComponent("MacPowerToys", isDirectory: true), to: directory)
+        return ClipboardHistoryStore(directory: directory)
+    }
+
+    /// One-time rename of the data folder. Never overwrites: if the new folder
+    /// already exists, the legacy one is left untouched for the user.
+    static func migrateLegacyDirectory(from legacy: URL, to current: URL) {
+        let files = FileManager.default
+        guard files.fileExists(atPath: legacy.path), !files.fileExists(atPath: current.path) else { return }
+        do {
+            try files.moveItem(at: legacy, to: current)
+        } catch {
+            // ponytail: history starts empty; the legacy folder stays where it was
+            print("ClipboardHistory: could not migrate \(legacy.path) (\(error.localizedDescription))")
+        }
     }
 
     /// A missing or unreadable index starts an empty history instead of failing launch.

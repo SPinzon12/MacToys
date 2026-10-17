@@ -227,7 +227,7 @@ final class ColorPickerSession: NSObject {
         alert.informativeText = """
         The Color Picker needs Screen Recording access to sample screen pixels. \
         Grant it under System Settings → Privacy & Security → Screen Recording, \
-        then relaunch Mac PowerToys.
+        then relaunch MacToys.
         """
         alert.addButton(withTitle: "Open Settings")
         alert.addButton(withTitle: "OK")

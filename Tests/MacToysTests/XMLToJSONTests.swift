@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import MacPowerToys
+@testable import MacToys
 
 /// XML → JSON: element → object, attributes as keys, `#text` for text,
 /// children nested by tag name (duplicate names become an array).

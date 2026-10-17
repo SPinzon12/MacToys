@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the app and packages it for download:
-#   dist/MacPowerToys-<version>.zip   (ditto, keeps signature and attributes)
-#   dist/MacPowerToys-<version>.dmg   (drag-to-Applications window)
+#   dist/MacToys-<version>.zip   (ditto, keeps signature and attributes)
+#   dist/MacToys-<version>.dmg   (drag-to-Applications window)
 #   dist/SHA256SUMS
 #
 #   scripts/package-release.sh
@@ -12,8 +12,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VERSION="$(tr -d '[:space:]' < "$ROOT/VERSION")"
 DIST="$ROOT/dist"
-APP="$DIST/Mac PowerToys.app"
-NAME="MacPowerToys-$VERSION"
+APP="$DIST/MacToys.app"
+NAME="MacToys-$VERSION"
 
 "$ROOT/scripts/build-app.sh"
 
@@ -27,7 +27,7 @@ trap 'rm -rf "$STAGE"' EXIT
 cp -R "$APP" "$STAGE/"
 ln -s /Applications "$STAGE/Applications"
 rm -f "$DIST/$NAME.dmg"
-hdiutil create -quiet -volname "Mac PowerToys $VERSION" -srcfolder "$STAGE" \
+hdiutil create -quiet -volname "MacToys $VERSION" -srcfolder "$STAGE" \
     -fs HFS+ -format UDZO "$DIST/$NAME.dmg"
 hdiutil verify -quiet "$DIST/$NAME.dmg"
 

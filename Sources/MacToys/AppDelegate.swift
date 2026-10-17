@@ -18,9 +18,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.button?.image = NSImage(
             systemSymbolName: "wand.and.stars",
-            accessibilityDescription: "Mac PowerToys"
+            accessibilityDescription: "MacToys"
         )
-        item.button?.toolTip = "Mac PowerToys"
+        item.button?.toolTip = "MacToys"
 
         let menu = NSMenu()
         menu.addItem(headerItem())
@@ -38,14 +38,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         let launch = NSMenuItem(title: "Launch at Login", action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
         launch.target = self
         if !LaunchAtLogin.isAvailable {
-            launch.toolTip = "Available when running the Mac PowerToys app, not `swift run`."
+            launch.toolTip = "Available when running the MacToys app, not `swift run`."
         }
         menu.addItem(launch)
         launchAtLoginItem = launch
         menu.addItem(.separator())
         // Target is nil on purpose: quit goes through the responder chain to NSApp.
         let quit = NSMenuItem(
-            title: "Quit Mac PowerToys",
+            title: "Quit MacToys",
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"
         )
@@ -58,9 +58,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
 
     /// Disabled bold app name on top: the classic Mac menu-extra header.
     private func headerItem() -> NSMenuItem {
-        let item = NSMenuItem(title: "Mac PowerToys", action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: "MacToys", action: nil, keyEquivalent: "")
         item.attributedTitle = NSAttributedString(
-            string: "Mac PowerToys",
+            string: "MacToys",
             attributes: [.font: NSFont.menuFont(ofSize: 0).withWeight(.bold)]
         )
         item.isEnabled = false

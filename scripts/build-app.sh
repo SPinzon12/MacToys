@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Builds dist/Mac PowerToys.app: universal release binary, Info.plist, icon,
+# Builds dist/MacToys.app: universal release binary, Info.plist, icon,
 # code signature.
 #
 #   scripts/build-app.sh
 #
 # Environment overrides:
 #   ARCHS          architectures to build (default: "arm64 x86_64")
-#   BUNDLE_ID      CFBundleIdentifier (default: dev.spinzon12.MacPowerToys)
+#   BUNDLE_ID      CFBundleIdentifier (default: dev.spinzon12.MacToys)
 #   BUILD_NUMBER   CFBundleVersion (default: git commit count)
 #   SIGN_IDENTITY  codesign identity (default: "-", ad-hoc). With a
 #                  "Developer ID Application" identity the build is ready to notarize.
@@ -15,12 +15,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VERSION="$(tr -d '[:space:]' < "$ROOT/VERSION")"
 BUILD_NUMBER="${BUILD_NUMBER:-$(git -C "$ROOT" rev-list --count HEAD 2>/dev/null || echo 1)}"
-BUNDLE_ID="${BUNDLE_ID:-dev.spinzon12.MacPowerToys}"
+BUNDLE_ID="${BUNDLE_ID:-dev.spinzon12.MacToys}"
 ARCHS="${ARCHS:-arm64 x86_64}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 
 WORK="$ROOT/.build/package"
-APP="$ROOT/dist/Mac PowerToys.app"
+APP="$ROOT/dist/MacToys.app"
 
 # The id goes through sed and into Info.plist: reverse-DNS characters only.
 if [[ ! "$BUNDLE_ID" =~ ^[A-Za-z0-9.-]+$ ]]; then
@@ -35,7 +35,7 @@ for arch in $ARCHS; do
     echo "==> Building $arch"
     args=(-c release --package-path "$ROOT" --triple "$arch-apple-macosx14.0" --scratch-path "$WORK/$arch")
     swift build "${args[@]}"
-    binaries+=("$(swift build "${args[@]}" --show-bin-path)/mac-powertoys")
+    binaries+=("$(swift build "${args[@]}" --show-bin-path)/mactoys")
 done
 
 echo "==> Assembling $APP"
@@ -43,7 +43,7 @@ rm -rf "$APP"
 # Never leave a half-built or unsigned app behind for packaging to pick up.
 trap 'rm -rf "$APP"' ERR
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-lipo -create "${binaries[@]}" -output "$APP/Contents/MacOS/mac-powertoys"
+lipo -create "${binaries[@]}" -output "$APP/Contents/MacOS/mactoys"
 sed -e "s|__BUNDLE_ID__|$BUNDLE_ID|" -e "s|__VERSION__|$VERSION|" -e "s|__BUILD__|$BUILD_NUMBER|" \
     "$ROOT/Packaging/Info.plist" > "$APP/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist" >/dev/null
@@ -62,4 +62,4 @@ codesign --force --options runtime "$timestamp" --sign "$SIGN_IDENTITY" "$APP"
 codesign --verify --strict --deep "$APP"
 trap - ERR
 
-echo "==> Done: $APP ($VERSION build $BUILD_NUMBER, $(lipo -archs "$APP/Contents/MacOS/mac-powertoys"))"
+echo "==> Done: $APP ($VERSION build $BUILD_NUMBER, $(lipo -archs "$APP/Contents/MacOS/mactoys"))"

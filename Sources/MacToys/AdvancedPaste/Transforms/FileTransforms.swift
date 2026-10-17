@@ -74,7 +74,7 @@ enum FileTransforms {
 
     private static func temporaryURL(fileExtension: String) -> URL {
         FileManager.default.temporaryDirectory
-            .appendingPathComponent("mac-powertoys-\(UUID().uuidString)")
+            .appendingPathComponent("mactoys-\(UUID().uuidString)")
             .appendingPathExtension(fileExtension)
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import MacPowerToys
+@testable import MacToys
 
 /// Clipboard history: capture rules, dedupe/cap ordering, search, persistence.
 struct ClipboardHistoryTests {
@@ -197,5 +197,55 @@ struct ClipboardHistoryTests {
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         try Data("not json".utf8).write(to: store.indexURL)
         #expect(store.load().entries.isEmpty)
+    }
+}
+
+/// The app was renamed from Mac PowerToys to MacToys: the saved history must follow.
+struct ClipboardHistoryMigrationTests {
+    private func scratch() throws -> URL {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mactoys-migration-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    @Test func movesLegacyFolderWhenNewOneIsMissing() throws {
+        let root = try scratch()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let legacy = root.appendingPathComponent("MacPowerToys")
+        let current = root.appendingPathComponent("MacToys")
+        try FileManager.default.createDirectory(at: legacy, withIntermediateDirectories: true)
+        try Data("index".utf8).write(to: legacy.appendingPathComponent("history.json"))
+
+        ClipboardHistoryStore.migrateLegacyDirectory(from: legacy, to: current)
+
+        #expect(try Data(contentsOf: current.appendingPathComponent("history.json")) == Data("index".utf8))
+        #expect(!FileManager.default.fileExists(atPath: legacy.path))
+    }
+
+    @Test func neverOverwritesAnExistingNewFolder() throws {
+        let root = try scratch()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let legacy = root.appendingPathComponent("MacPowerToys")
+        let current = root.appendingPathComponent("MacToys")
+        for (dir, body) in [(legacy, "old"), (current, "new")] {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            try Data(body.utf8).write(to: dir.appendingPathComponent("history.json"))
+        }
+
+        ClipboardHistoryStore.migrateLegacyDirectory(from: legacy, to: current)
+
+        #expect(try Data(contentsOf: current.appendingPathComponent("history.json")) == Data("new".utf8))
+        #expect(FileManager.default.fileExists(atPath: legacy.path)) // left for the user, untouched
+    }
+
+    @Test func noLegacyFolderIsANoOp() throws {
+        let root = try scratch()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let current = root.appendingPathComponent("MacToys")
+
+        ClipboardHistoryStore.migrateLegacyDirectory(from: root.appendingPathComponent("MacPowerToys"), to: current)
+
+        #expect(!FileManager.default.fileExists(atPath: current.path))
     }
 }

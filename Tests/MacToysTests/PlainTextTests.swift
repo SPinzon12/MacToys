@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import MacPowerToys
+@testable import MacToys
 
 /// Plain text: strip HTML tags and decode entities, no markdown conversion.
 struct PlainTextTests {

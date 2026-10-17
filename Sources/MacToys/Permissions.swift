@@ -17,7 +17,7 @@ enum Permissions {
 
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "Mac PowerToys needs permissions"
+        alert.messageText = "MacToys needs permissions"
         alert.informativeText = """
         Missing: \(missing.map(\.name).joined(separator: ", ")).
         Grant them under System Settings → Privacy & Security so the modules \
