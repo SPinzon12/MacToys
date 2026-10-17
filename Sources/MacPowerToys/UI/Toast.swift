@@ -16,8 +16,14 @@ enum Toast {
         case swatch(NSColor)
     }
 
-    static func show(_ message: String, leading: Leading = .symbol("checkmark.circle.fill")) {
-        ToastController.shared.show(message: message, leading: leading)
+    /// `hold` is how long the pill stays before fading; a later toast always
+    /// replaces it, so a long hold suits a "working…" message.
+    static func show(
+        _ message: String,
+        leading: Leading = .symbol("checkmark.circle.fill"),
+        hold: TimeInterval = 1.0
+    ) {
+        ToastController.shared.show(message: message, leading: leading, hold: hold)
     }
 }
 
@@ -30,7 +36,6 @@ private final class ToastController {
 
     private enum Timing {
         static let fadeIn: TimeInterval = 0.12
-        static let hold: TimeInterval = 1.0
         static let fadeOut: TimeInterval = 0.25
         /// Starting scale of the entrance; the pill settles to 1.
         static let startScale: CGFloat = 0.94
@@ -47,7 +52,7 @@ private final class ToastController {
     /// The running show/hold/hide sequence; cancelled when a new toast replaces it.
     private var sequence: Task<Void, Never>?
 
-    func show(message: String, leading: Toast.Leading) {
+    func show(message: String, leading: Toast.Leading, hold: TimeInterval) {
         sequence?.cancel()
         let panel = makePanelIfNeeded()
         guard let container, let glass, let host else { return }
@@ -79,7 +84,7 @@ private final class ToastController {
         Self.fade(panel, to: 1, duration: Timing.fadeIn, curve: .easeOut)
 
         sequence = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(Timing.fadeIn + Timing.hold))
+            try? await Task.sleep(for: .seconds(Timing.fadeIn + hold))
             guard !Task.isCancelled, let self, let panel = self.panel else { return }
             Self.fade(panel, to: 0, duration: Timing.fadeOut, curve: .easeIn)
             try? await Task.sleep(for: .seconds(Timing.fadeOut))

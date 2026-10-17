@@ -32,10 +32,19 @@ permission — without it, one alert explains where to grant it.
 T3 delivers the Text Extractor: **⌃⇧O** captures the main display once and
 shows it dimmed behind an overlay. Drag a rectangle to OCR that region into
 the clipboard (small crops are upscaled ×1.5 first, like PowerOCR); a plain
-click instead copies just the word under the cursor — the full screen is OCR'd
-once and cached, so later clicks are instant. Esc or right-click cancels
-(re-pressing the hotkey also cancels). It needs the same **Screen Recording**
-permission as the Color Picker.
+click instead copies just the word under the cursor (the full screen is OCR'd
+for the hit-test). Esc or right-click cancels (re-pressing the hotkey also
+cancels). It needs the same **Screen Recording** permission as the Color Picker.
+
+Performance: the overlay closes as soon as you release the mouse and OCR runs
+off the main thread; the result lands with a `Copied …` toast (or `No text
+found`). The selection is composited with Core Animation layers, so dragging
+costs ~0.1 ms per event instead of repainting the whole retina capture. Vision
+OCR usually takes ~40–190 ms, but the **first** `.accurate` request ever made
+by a given executable path takes ~26 s while macOS prepares the model (cached
+afterwards, also across rebuilds at the same path). The app runs a warm-up pass
+at launch to absorb it, and shows `Recognizing text…` if an extraction takes
+longer than 400 ms.
 
 **⌃⇧V** opens the clipboard panel — think Spotlight's clipboard view (⌘Space,
 then ⌘4). It sits centered in the upper third of the screen under the cursor:

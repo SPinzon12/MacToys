@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Permissions.preflight()
         hotKeys.register()
         ClipboardHistoryService.shared.start()
+        OCRService.warmUp() // first OCR of a new build path costs ~26 s; pay it now
     }
 
     private func setupStatusItem() {

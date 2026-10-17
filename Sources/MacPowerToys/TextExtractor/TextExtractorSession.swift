@@ -21,9 +21,6 @@ final class TextExtractorSession: NSObject {
     private var capture: CGImage?
     /// View size in points; the capture maps onto it 1:1 (both cover the display).
     private var bounds = NSRect.zero
-    /// Word boxes from OCR of the full capture, kept after the first click so a
-    /// second click is instant.
-    private var cachedWords: [OCRService.Word]?
     private var reportedCaptureFailure = false
 
     private override init() {
@@ -91,7 +88,6 @@ final class TextExtractorSession: NSObject {
         window = nil
         selectionView = nil
         capture = nil
-        cachedWords = nil
         if Self.current === self {
             Self.current = nil
         }
@@ -99,20 +95,28 @@ final class TextExtractorSession: NSObject {
 
     // MARK: - Extraction
 
+    /// The overlay closes right away; OCR runs off the main thread and the
+    /// result lands on the clipboard (with its toast) when it is ready.
     private func extractRegion(_ rect: NSRect) {
         guard let crop = crop(rect) else {
             finish()
             return
         }
-        // ponytail: Vision runs on the main thread — one blocking pass per
-        // region; move it off-main only if the wait ever feels stuck.
-        let lines = (try? OCRService.lines(in: OCRService.upscaledIfSmall(crop))) ?? []
-        let text = lines.joined(separator: "\n")
-        // Nothing recognized → leave the clipboard alone instead of emptying it.
-        if !text.isEmpty {
-            copy(text, confirmation: "Copied \(text.count) \(text.count == 1 ? "char" : "chars")")
-        }
         finish()
+        Task {
+            let waiting = Self.showWaitingToastIfSlow()
+            let text = await Task.detached(priority: .userInitiated) {
+                ((try? OCRService.lines(in: OCRService.upscaledIfSmall(crop))) ?? [])
+                    .joined(separator: "\n")
+            }.value
+            waiting.cancel()
+            // Nothing recognized → leave the clipboard alone instead of emptying it.
+            guard !text.isEmpty else {
+                Toast.show("No text found", leading: .symbol("text.viewfinder"))
+                return
+            }
+            Self.copy(text, confirmation: "Copied \(text.count) \(text.count == 1 ? "char" : "chars")")
+        }
     }
 
     private func extractWord(at point: NSPoint) {
@@ -120,22 +124,38 @@ final class TextExtractorSession: NSObject {
             finish()
             return
         }
-        if cachedWords == nil {
-            // ponytail: one full-screen OCR per session, blocking; cached so a
-            // second click does not pay for it again.
-            cachedWords = (try? OCRService.words(in: capture)) ?? []
-        }
         // View coords and Vision boxes are both y-up and normalized over the
         // same display, so the click maps straight onto the word boxes.
         let normalized = CGPoint(x: point.x / bounds.width, y: point.y / bounds.height)
-        if let word = cachedWords?.first(where: { $0.box.contains(normalized) }) {
-            copy(word.text, confirmation: "Copied word")
-        }
         finish()
+        Task {
+            // No prefetch on purpose: Vision serializes text requests, so a
+            // background full-screen pass would delay every region drag.
+            let waiting = Self.showWaitingToastIfSlow()
+            let words = await Task.detached(priority: .userInitiated) {
+                (try? OCRService.words(in: capture)) ?? []
+            }.value
+            waiting.cancel()
+            guard let word = words.first(where: { $0.box.contains(normalized) }) else {
+                Toast.show("No word under the cursor", leading: .symbol("text.viewfinder"))
+                return
+            }
+            Self.copy(word.text, confirmation: "Copied word")
+        }
+    }
+
+    /// OCR is usually ~100 ms, but the first run of a new build can take ~26 s;
+    /// past 400 ms a toast says it is working (the result toast replaces it).
+    private static func showWaitingToastIfSlow() -> Task<Void, Never> {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(400))
+            guard !Task.isCancelled else { return }
+            Toast.show("Recognizing text…", leading: .symbol("hourglass"), hold: 60)
+        }
     }
 
     /// Copies `text` and confirms it with a toast reading `confirmation`.
-    private func copy(_ text: String, confirmation: String) {
+    private static func copy(_ text: String, confirmation: String) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         _ = pasteboard.setString(text, forType: .string)

@@ -1,9 +1,45 @@
+import CoreText
 import Foundation
 import Vision
 
 /// Vision OCR for the Text Extractor: `.accurate` recognition shared by both
-/// modes, plus word-level boxes for click hit-testing.
+/// modes, plus word-level boxes for click hit-testing. Synchronous and
+/// thread-agnostic; the session runs it off the main thread.
+///
+/// Measured on an M4 (macOS 27): the first `.accurate` request ever made by a
+/// given executable path takes ~26 s (model preparation, cached on disk per
+/// path afterwards; the same binary copied elsewhere pays it again), and
+/// Vision serializes every other text request behind it — `.fast` included.
+/// Later requests take ~40–190 ms, even across relaunches and rebuilds at the
+/// same path. Pinning the GPU or CPU compute device did not avoid it.
 enum OCRService {
+    /// Runs one throwaway `.accurate` pass at launch, so that one-time
+    /// preparation (or the per-launch model load) happens before the hotkey.
+    static func warmUp() {
+        Task.detached(priority: .utility) {
+            guard let image = warmUpImage() else { return }
+            _ = try? recognize(image)
+        }
+    }
+
+    /// A few words of real text: an empty image could return before the
+    /// recognizer model is ever loaded.
+    private static func warmUpImage() -> CGImage? {
+        guard let context = CGContext(
+            data: nil, width: 320, height: 64, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+        context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: 320, height: 64))
+        let font = CTFontCreateWithName("Helvetica" as CFString, 28, nil)
+        let text = NSAttributedString(string: "Warm up OCR", attributes: [
+            NSAttributedString.Key(kCTFontAttributeName as String): font
+        ])
+        context.textPosition = CGPoint(x: 12, y: 20)
+        CTLineDraw(CTLineCreateWithAttributedString(text), context)
+        return context.makeImage()
+    }
     /// One recognized word and its box in Vision image space: normalized 0…1,
     /// origin bottom-left — the same orientation as the overlay's view coords.
     struct Word {
@@ -11,8 +47,7 @@ enum OCRService {
         let box: CGRect
     }
 
-    /// Words over a full-screen capture. Computed once per session and cached,
-    /// so the first click pays for the OCR and later clicks are instant.
+    /// Words over a full-screen capture, for the click hit-test.
     static func words(in image: CGImage) throws -> [Word] {
         var words: [Word] = []
         for observation in try recognize(image) {
