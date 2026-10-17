@@ -66,3 +66,11 @@ work checked with real-window screenshots (no UI test runner on this toolchain).
   exit; sampling unchanged; HSL matches colorsys). Applied: card clamped to the
   cursor's display (multi-display gap), stale comments, unused helper removed.
   94 tests. Next: U3 onboarding, U4 Settings.
+- 2026-10-17 user (verbatim): "EL COLOR PICKER QUEDO MUY RARO REVISEMOS UI Y UX
+  guiemos de cosas actuales. se ve horrible y mala experiencia" → reviewed current
+  practice (macOS NSColorSampler loupe, ColorSlurp/Sip result card + history,
+  PowerToys). User chose "Lupa nativa + tarjeta (Recommended)". Done c1fb266: system
+  loupe (no Screen Recording needed), auto-copy in default format, glass result card
+  (≈ CSS name, HEX/RGB/HSL rows, 10 recent colors, Pick Again ⌘P). Old custom lens
+  removed. 101 tests (7 new). Sampler exercised for real (shown, Esc → nil); card
+  screenshot-checked.
