@@ -22,6 +22,12 @@ SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 WORK="$ROOT/.build/package"
 APP="$ROOT/dist/Mac PowerToys.app"
 
+# The id goes through sed and into Info.plist: reverse-DNS characters only.
+if [[ ! "$BUNDLE_ID" =~ ^[A-Za-z0-9.-]+$ ]]; then
+    echo "error: BUNDLE_ID must contain only letters, digits, '.' and '-': $BUNDLE_ID" >&2
+    exit 1
+fi
+
 # One scratch path per architecture: with a shared one, both triples write the
 # same Products/Release folder and the last build wins.
 binaries=()
@@ -34,9 +40,11 @@ done
 
 echo "==> Assembling $APP"
 rm -rf "$APP"
+# Never leave a half-built or unsigned app behind for packaging to pick up.
+trap 'rm -rf "$APP"' ERR
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 lipo -create "${binaries[@]}" -output "$APP/Contents/MacOS/mac-powertoys"
-sed -e "s/__BUNDLE_ID__/$BUNDLE_ID/" -e "s/__VERSION__/$VERSION/" -e "s/__BUILD__/$BUILD_NUMBER/" \
+sed -e "s|__BUNDLE_ID__|$BUNDLE_ID|" -e "s|__VERSION__|$VERSION|" -e "s|__BUILD__|$BUILD_NUMBER|" \
     "$ROOT/Packaging/Info.plist" > "$APP/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist" >/dev/null
 printf 'APPL????' > "$APP/Contents/PkgInfo"
@@ -52,5 +60,6 @@ timestamp="--timestamp"
 [[ "$SIGN_IDENTITY" == "-" ]] && timestamp="--timestamp=none" # ad-hoc cannot be timestamped
 codesign --force --options runtime "$timestamp" --sign "$SIGN_IDENTITY" "$APP"
 codesign --verify --strict --deep "$APP"
+trap - ERR
 
 echo "==> Done: $APP ($VERSION build $BUILD_NUMBER, $(lipo -archs "$APP/Contents/MacOS/mac-powertoys"))"

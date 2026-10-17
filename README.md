@@ -6,13 +6,17 @@ to the Mac behind global hotkeys.
 
 ## Install
 
-1. Download `MacPowerToys-<version>.dmg` (or the `.zip`) from the releases page and
-   check it against `SHA256SUMS` if you like: `shasum -a 256 -c SHA256SUMS`.
+1. Get `MacPowerToys-<version>.dmg` (or the `.zip`) — from the project's releases
+   once they are published, or build it yourself with `scripts/package-release.sh`
+   (see [Build a release](#build-a-release)). Optionally check it:
+   `shasum -a 256 -c SHA256SUMS`.
 2. Open the disk image and drag **Mac PowerToys** onto **Applications**.
-3. First launch: this build is **not notarized by Apple** yet, so macOS blocks a
-   plain double-click. Open it once with **right-click → Open → Open**, or allow it
-   under **System Settings → Privacy & Security → Open Anyway**. (Terminal
-   alternative: `xattr -dr com.apple.quarantine "/Applications/Mac PowerToys.app"`.)
+3. First launch: this build is **not notarized by Apple** yet, so macOS blocks it.
+   Double-click it once (macOS refuses), then open **System Settings → Privacy &
+   Security**, scroll down and click **Open Anyway** next to "Mac PowerToys" (asks
+   for your password). On macOS 14 **right-click → Open → Open** also works; from
+   macOS 15 on, only Open Anyway does. (Terminal alternative:
+   `xattr -dr com.apple.quarantine "/Applications/Mac PowerToys.app"`.)
 4. A wand icon appears in the menu bar (no Dock icon). Grant the two permissions it
    asks for — see [Required macOS permissions](#required-macos-permissions) — and
    relaunch it.

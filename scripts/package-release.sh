@@ -19,7 +19,7 @@ NAME="MacPowerToys-$VERSION"
 
 echo "==> Zipping"
 rm -f "$DIST/$NAME.zip"
-ditto -c -k --sequesterRsrc --keepParent "$APP" "$DIST/$NAME.zip"
+ditto -c -k --keepParent "$APP" "$DIST/$NAME.zip" # Apple's notarization form; no __MACOSX/
 
 echo "==> Building disk image"
 STAGE="$(mktemp -d)"

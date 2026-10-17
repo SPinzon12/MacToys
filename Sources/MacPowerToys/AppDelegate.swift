@@ -80,7 +80,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
     /// The login-item state can change in System Settings; read it on every open.
     func menuWillOpen(_ menu: NSMenu) {
         guard let item = launchAtLoginItem else { return }
-        item.state = LaunchAtLogin.isAvailable && LaunchAtLogin.isEnabled ? .on : .off
+        item.state = !LaunchAtLogin.isAvailable ? .off
+            : LaunchAtLogin.isEnabled ? .on
+            : LaunchAtLogin.needsApproval ? .mixed : .off
         item.title = LaunchAtLogin.isAvailable && LaunchAtLogin.needsApproval
             ? "Launch at Login (approve in System Settings)"
             : "Launch at Login"

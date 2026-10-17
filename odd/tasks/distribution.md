@@ -63,3 +63,8 @@ Branch: `main` (repo convention, no remote yet). Delivery: ask-on-risk. Test run
 - 2026-10-16 user, verbatim: "dale, pues es un proyecto personal y si alguien lo quiere
   usar adelante" → MIT (the recommended option). LICENSE + README section, LICENSE
   copied into the bundle.
+- 2026-10-16 verifier: S2–S5 PASS, 0 blockers. Applied advisories: Gatekeeper steps
+  (Open Anyway first; Control-click no longer works on macOS 15+), no fake releases
+  page, unsigned app removed on signing failure (trap ERR, tested with a bogus
+  identity), BUNDLE_ID validated, zip without __MACOSX, pending Launch-at-Login
+  approval cancellable (mixed state). Release rerun: checksums OK, 69 tests green.

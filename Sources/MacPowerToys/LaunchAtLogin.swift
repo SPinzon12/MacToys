@@ -25,7 +25,8 @@ enum LaunchAtLogin {
 
     static func toggle() {
         do {
-            if isEnabled {
+            // A pending approval counts as on: clicking again cancels it.
+            if isEnabled || needsApproval {
                 try SMAppService.mainApp.unregister()
             } else {
                 try SMAppService.mainApp.register()
