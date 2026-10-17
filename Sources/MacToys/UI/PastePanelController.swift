@@ -2,8 +2,11 @@ import AppKit
 import SwiftUI
 
 /// Borderless windows refuse key status by default; the panel needs keys
-/// (typing, ↑/↓, Return, ⌘digits, Esc) while it is up.
-private final class KeyablePanel: NSWindow {
+/// (typing, ↑/↓, Return, ⌘digits, Esc) while it is up. A non-activating panel
+/// takes them without activating MacToys — the Spotlight model — so it works
+/// when opened from the menu-bar panel (where activation is refused) and the
+/// app you paste into keeps focus the whole time.
+private final class KeyablePanel: NSPanel {
     override var canBecomeKey: Bool { true }
 }
 
@@ -43,7 +46,7 @@ final class PastePanelController: NSObject, NSWindowDelegate {
             let size = NSSize(width: Theme.Spotlight.width, height: Theme.Spotlight.height)
             let window = KeyablePanel(
                 contentRect: NSRect(origin: .zero, size: size),
-                styleMask: [.borderless],
+                styleMask: [.borderless, .nonactivatingPanel],
                 backing: .buffered,
                 defer: false
             )
@@ -63,7 +66,6 @@ final class PastePanelController: NSObject, NSWindowDelegate {
             window.alphaValue = 0
             self.window = window
 
-            NSApp.activate() // brief activation so the panel can take keys
             window.makeKeyAndOrderFront(nil)
             window.invalidateShadow()
             if let field = Self.firstTextField(in: window.contentView) {
