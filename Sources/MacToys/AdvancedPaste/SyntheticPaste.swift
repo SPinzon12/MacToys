@@ -36,11 +36,12 @@ enum SyntheticPaste {
         or grant access under System Settings → Privacy & Security → \
         Accessibility and try again.
         """
-        alert.addButton(withTitle: "Open Settings")
+        alert.addButton(withTitle: "Fix Permissions…")
         alert.addButton(withTitle: "OK")
         if alert.runModal() == .alertFirstButtonReturn {
-            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
-            _ = NSWorkspace.shared.open(url)
+            // The window requests the permission (which lists MacToys in System
+            // Settings) and offers the relaunch Screen Recording needs.
+            PermissionsWindowController.shared.show()
         }
     }
 }

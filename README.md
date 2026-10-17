@@ -230,8 +230,13 @@ Two permissions are required for the full feature set:
 
 Steps:
 
-1. Launch the app once — it shows a single alert listing any missing permission
-   and can open the right pane for you.
+1. Launch the app — the **Permissions** window opens when something is missing
+   (also under **Permissions…** in the menu). **Grant…** asks macOS for the
+   permission, which adds MacToys to the list in System Settings, and opens the
+   right pane; the status updates live. **Relaunch MacToys** applies Screen
+   Recording. If a switch is ON but MacToys still cannot use it (typical after an
+   update), **Reset Permissions…** makes macOS forget MacToys' grants — only
+   MacToys' — so you can grant them fresh.
 2. Or open **System Settings → Privacy & Security → Screen Recording** and enable
    **MacToys**. When running from source (`swift run`), enable your terminal
    app (Terminal/iTerm) instead — a bare executable run from a terminal is

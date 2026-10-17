@@ -4,12 +4,15 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenuItemValidation {
     private var statusItem: NSStatusItem?
     private var launchAtLoginItem: NSMenuItem?
+    private var permissionsItem: NSMenuItem?
     private let keepAwakeMenu = NSMenu(title: "Keep Awake")
     private let hotKeys = HotKeys()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
-        Permissions.preflight()
+        if !Permissions.current.allGranted {
+            PermissionsWindowController.shared.show()
+        }
         hotKeys.register()
         ClipboardHistoryService.shared.start()
         OCRService.warmUp() // first OCR of a new build path costs ~26 s; pay it now
@@ -46,6 +49,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         keepAwakeMenu.delegate = self
         keepAwake.submenu = keepAwakeMenu
         menu.addItem(keepAwake)
+        let permissions = NSMenuItem(title: "Permissions…", action: #selector(showPermissions), keyEquivalent: "")
+        permissions.image = NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "Permissions")
+        permissions.target = self
+        menu.addItem(permissions)
+        permissionsItem = permissions
         let launch = NSMenuItem(title: "Launch at Login", action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
         launch.target = self
         if !LaunchAtLogin.isAvailable {
@@ -94,6 +102,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
             rebuildKeepAwakeMenu()
             return
         }
+        let missing = Permissions.current.missing.count
+        permissionsItem?.title = missing == 0 ? "Permissions…" : "Permissions… (\(missing) missing)"
+        permissionsItem?.image = NSImage(
+            systemSymbolName: missing == 0 ? "lock.shield" : "exclamationmark.shield",
+            accessibilityDescription: "Permissions"
+        )
         guard let item = launchAtLoginItem else { return }
         item.state = !LaunchAtLogin.isAvailable ? .off
             : LaunchAtLogin.isEnabled ? .on
@@ -190,6 +204,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
     @objc private func runAdvancedPaste() { AdvancedPasteModule.trigger() }
 
     @objc private func toggleLaunchAtLogin() { LaunchAtLogin.toggle() }
+
+    @objc private func showPermissions() { PermissionsWindowController.shared.show() }
 
     @objc private func clearHistory() {
         let alert = NSAlert()

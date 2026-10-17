@@ -39,7 +39,7 @@ final class ColorPickerSession: NSObject {
     }
 
     func begin() {
-        // Runtime fallback: Permissions.preflight() warns at launch, this catches
+        // Runtime fallback: the Permissions window opens at launch, this catches
         // the session itself (permission revoked since launch, denied elsewhere).
         guard CGPreflightScreenCaptureAccess() else {
             finish()
@@ -229,11 +229,12 @@ final class ColorPickerSession: NSObject {
         Grant it under System Settings → Privacy & Security → Screen Recording, \
         then relaunch MacToys.
         """
-        alert.addButton(withTitle: "Open Settings")
+        alert.addButton(withTitle: "Fix Permissions…")
         alert.addButton(withTitle: "OK")
         if alert.runModal() == .alertFirstButtonReturn {
-            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!
-            _ = NSWorkspace.shared.open(url)
+            // The window requests the permission (which lists MacToys in System
+            // Settings) and offers the relaunch Screen Recording needs.
+            PermissionsWindowController.shared.show()
         }
     }
 }
