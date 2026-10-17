@@ -5,7 +5,10 @@
 The Color Picker, Text Extractor and Advanced Paste modules port the behaviour of
 the corresponding modules of [microsoft/PowerToys](https://github.com/microsoft/PowerToys)
 (`src/modules/colorPicker`, `src/modules/PowerOCR`, `src/modules/AdvancedPaste`),
-written from reading their source. PowerToys is distributed under this license:
+written from reading their source. MacToys is an independent personal project:
+it isn't made by, affiliated with, or endorsed by Microsoft, and Microsoft and
+PowerToys are trademarks of Microsoft Corporation. PowerToys is distributed under
+this license:
 
 ```
 The MIT License

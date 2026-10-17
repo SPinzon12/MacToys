@@ -235,3 +235,8 @@ The Color Picker, Text Extractor and Advanced Paste tools port the behavior of
 [Microsoft PowerToys](https://github.com/microsoft/PowerToys) (MIT); see
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The visual style is inspired by
 [vorssaint-utils](https://github.com/vorssaint/vorssaint-utils); no code was copied.
+
+> **Not a Microsoft product.** MacToys is a personal side project. It isn't made
+> by, affiliated with, or endorsed by Microsoft. Microsoft and PowerToys are
+> trademarks of Microsoft Corporation — they're only mentioned here to say where
+> the idea came from.
