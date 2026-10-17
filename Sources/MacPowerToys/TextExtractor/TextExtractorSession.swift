@@ -103,6 +103,7 @@ final class TextExtractorSession: NSObject {
             return
         }
         finish()
+        let ticket = Self.takeTicket()
         Task {
             let waiting = Self.showWaitingToastIfSlow()
             let text = await Task.detached(priority: .userInitiated) {
@@ -111,11 +112,12 @@ final class TextExtractorSession: NSObject {
             }.value
             waiting.cancel()
             // Nothing recognized → leave the clipboard alone instead of emptying it.
-            guard !text.isEmpty else {
-                Toast.show("No text found", leading: .symbol("text.viewfinder"))
-                return
-            }
-            Self.copy(text, confirmation: "Copied \(text.count) \(text.count == 1 ? "char" : "chars")")
+            Self.deliver(
+                text.isEmpty ? nil : text,
+                ticket: ticket,
+                confirmation: "Copied \(text.count) \(text.count == 1 ? "char" : "chars")",
+                missMessage: "No text found"
+            )
         }
     }
 
@@ -128,6 +130,7 @@ final class TextExtractorSession: NSObject {
         // same display, so the click maps straight onto the word boxes.
         let normalized = CGPoint(x: point.x / bounds.width, y: point.y / bounds.height)
         finish()
+        let ticket = Self.takeTicket()
         Task {
             // No prefetch on purpose: Vision serializes text requests, so a
             // background full-screen pass would delay every region drag.
@@ -136,11 +139,12 @@ final class TextExtractorSession: NSObject {
                 (try? OCRService.words(in: capture)) ?? []
             }.value
             waiting.cancel()
-            guard let word = words.first(where: { $0.box.contains(normalized) }) else {
-                Toast.show("No word under the cursor", leading: .symbol("text.viewfinder"))
-                return
-            }
-            Self.copy(word.text, confirmation: "Copied word")
+            Self.deliver(
+                words.first(where: { $0.box.contains(normalized) })?.text,
+                ticket: ticket,
+                confirmation: "Copied word",
+                missMessage: "No word under the cursor"
+            )
         }
     }
 
@@ -154,12 +158,36 @@ final class TextExtractorSession: NSObject {
         }
     }
 
-    /// Copies `text` and confirms it with a toast reading `confirmation`.
-    private static func copy(_ text: String, confirmation: String) {
+    /// Id of the newest extraction; results from older ones are dropped.
+    private static var latestTicketID = 0
+
+    private static func takeTicket() -> ExtractionTicket {
+        latestTicketID += 1
+        return ExtractionTicket(id: latestTicketID, changeCount: NSPasteboard.general.changeCount)
+    }
+
+    /// Copies `text` and confirms it with a toast reading `confirmation`, or
+    /// shows `missMessage` when OCR found nothing — but only if the ticket is
+    /// still the newest and the clipboard was not changed meanwhile.
+    private static func deliver(_ text: String?, ticket: ExtractionTicket, confirmation: String, missMessage: String) {
         let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        _ = pasteboard.setString(text, forType: .string)
-        Toast.show(confirmation, leading: .symbol("text.viewfinder"))
+        let verdict = ticket.verdict(latestID: latestTicketID, currentChangeCount: pasteboard.changeCount)
+        guard verdict != .superseded else { return } // the newer extraction shows its own toasts
+        guard let text else {
+            Toast.show(missMessage, leading: .symbol("text.viewfinder"))
+            return
+        }
+        switch verdict {
+        case .superseded:
+            return
+        case .clipboardChanged:
+            // Also replaces a "Recognizing text…" pill that would otherwise linger.
+            Toast.show("Kept your newer copy", leading: .symbol("doc.on.clipboard"))
+        case .deliver:
+            pasteboard.clearContents()
+            _ = pasteboard.setString(text, forType: .string)
+            Toast.show(confirmation, leading: .symbol("text.viewfinder"))
+        }
     }
 
     /// View rect (y-up, origin bottom-left) → image pixels (y-down, origin top-left).

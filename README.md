@@ -44,7 +44,9 @@ OCR usually takes ~40–190 ms, but the **first** `.accurate` request ever made
 by a given executable path takes ~26 s while macOS prepares the model (cached
 afterwards, also across rebuilds at the same path). The app runs a warm-up pass
 at launch to absorb it, and shows `Recognizing text…` if an extraction takes
-longer than 400 ms.
+longer than 400 ms. A slow result never clobbers anything: only the newest
+extraction may write, and if you copied something else while it ran, your copy
+is kept (`Kept your newer copy`).
 
 **⌃⇧V** opens the clipboard panel — think Spotlight's clipboard view (⌘Space,
 then ⌘4). It sits centered in the upper third of the screen under the cursor:
