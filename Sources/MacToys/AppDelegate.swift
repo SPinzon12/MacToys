@@ -57,7 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func makePanelModel() -> MenuPanelModel {
         let model = MenuPanelModel(version: AppVersion.label())
         model.onModule = { [weak self] module in
-            self?.panel.close()
+            self?.panel.close(animated: false) // gone before the Text Extractor freezes the screen
             switch module {
             case .colorPicker: ColorPickerModule.trigger()
             case .textExtractor: TextExtractorModule.trigger()
@@ -102,6 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.permissions = Permissions.current
         model.launchAtLoginAvailable = LaunchAtLogin.isAvailable
         model.launchAtLogin = LaunchAtLogin.isAvailable && LaunchAtLogin.isEnabled
+        model.launchAtLoginPending = LaunchAtLogin.isAvailable && LaunchAtLogin.needsApproval
         model.now = Date()
     }
 

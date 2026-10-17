@@ -44,6 +44,8 @@ final class MenuPanelModel: ObservableObject {
     @Published var permissions = PermissionStatus(screenRecording: true, accessibility: true)
     @Published var launchAtLogin = false
     @Published var launchAtLoginAvailable = false
+    /// Registered but waiting for approval in System Settings → Login Items.
+    @Published var launchAtLoginPending = false
     /// Ticks once a second while the panel is open, for the countdown.
     @Published var now = Date()
     let version: String
@@ -97,7 +99,7 @@ struct MenuPanelView: View {
             Button(action: model.onPermissions) {
                 HStack(spacing: 5) {
                     Circle()
-                        .fill(model.permissions.allGranted ? Color.green : Color.orange)
+                        .fill(model.permissions.allGranted ? Color.green : Theme.attention)
                         .frame(width: 7, height: 7)
                     Text(model.permissions.summary).font(Theme.caption(11))
                 }
@@ -116,8 +118,9 @@ struct MenuPanelView: View {
             FooterButton(title: "Clear History", symbol: "trash", action: model.onClearHistory)
             if model.launchAtLoginAvailable {
                 FooterButton(
-                    title: "Open at Login",
-                    symbol: model.launchAtLogin ? "checkmark.circle.fill" : "circle",
+                    title: model.launchAtLoginPending ? "Approve in Settings" : "Open at Login",
+                    symbol: model.launchAtLogin ? "checkmark.circle.fill"
+                        : model.launchAtLoginPending ? "exclamationmark.circle" : "circle",
                     action: model.onLaunchAtLogin
                 )
             }
@@ -186,11 +189,12 @@ private struct KeepAwakeCard: View {
                         .monospacedDigit()
                 }
                 Spacer()
-                Toggle("", isOn: Binding(
+                Toggle("Keep Awake", isOn: Binding( // label kept for VoiceOver
                     get: { model.keepAwake != nil },
                     set: { model.onKeepAwake($0 ? .indefinitely : nil) }
                 ))
                 .toggleStyle(.switch)
+                .tint(Theme.accent)
                 .controlSize(.small)
                 .labelsHidden()
             }
@@ -297,6 +301,7 @@ final class MenuPanelController {
     private var window: NSPanel?
     private var outsideClickMonitor: Any?
     private var keyMonitor: Any?
+    private var resignObserver: NSObjectProtocol?
     private var tick: Timer?
 
     init(model: MenuPanelModel) {
@@ -305,8 +310,17 @@ final class MenuPanelController {
 
     var isShown: Bool { window?.isVisible == true }
 
+    /// When the panel last closed. Clicking the status item while the panel is
+    /// open first takes key status away (closing it), then fires the item's
+    /// action: without this, that action would reopen the panel at once.
+    private var closedAt = Date.distantPast
+
     func toggle(below button: NSStatusBarButton) {
-        isShown ? close() : show(below: button)
+        if isShown {
+            close()
+        } else if Date().timeIntervalSince(closedAt) > 0.3 {
+            show(below: button)
+        }
     }
 
     func show(below button: NSStatusBarButton) {
@@ -346,7 +360,9 @@ final class MenuPanelController {
         tick = timer
     }
 
-    func close() {
+    /// `animated: false` before running a module: the Text Extractor freezes the
+    /// screen right away, and a panel still fading out would be captured into it.
+    func close(animated: Bool = true) {
         tick?.invalidate()
         tick = nil
         for monitor in [outsideClickMonitor, keyMonitor].compactMap({ $0 }) {
@@ -354,8 +370,20 @@ final class MenuPanelController {
         }
         outsideClickMonitor = nil
         keyMonitor = nil
+        if let resignObserver {
+            NotificationCenter.default.removeObserver(resignObserver)
+            self.resignObserver = nil
+        }
         guard let window else { return }
         self.window = nil
+        closedAt = Date()
+        guard animated else {
+            window.orderOut(nil)
+            // orderOut alone leaves the panel in the next screen capture until the
+            // window server composites again; flushing removes it right now (measured).
+            CATransaction.flush()
+            return
+        }
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = Theme.Motion.dismissDuration
             window.animator().alphaValue = 0
@@ -371,9 +399,18 @@ final class MenuPanelController {
             MainActor.assumeIsolated { self?.close() }
         }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard event.keyCode == 53 else { return event } // esc
-            MainActor.assumeIsolated { self?.close() }
+            // Only Esc aimed at the panel: other MacToys windows keep their own Esc.
+            guard event.keyCode == 53, let self,
+                  MainActor.assumeIsolated({ event.window === self.window }) else { return event }
+            MainActor.assumeIsolated { self.close() }
             return nil
+        }
+        // Clicks in MacToys' own windows, ⌘Tab and Space switches never reach the
+        // global monitor; losing key status covers them.
+        resignObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didResignKeyNotification, object: window, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.close() }
         }
     }
 
