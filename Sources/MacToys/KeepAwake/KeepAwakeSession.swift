@@ -34,8 +34,23 @@ enum KeepAwakeDuration: CaseIterable {
 struct KeepAwakeSession {
     let duration: KeepAwakeDuration
     let startedAt: Date
+    /// Added with "Add 15 Minutes".
+    private(set) var extraTime: TimeInterval = 0
 
-    var endsAt: Date? { duration.interval.map(startedAt.addingTimeInterval) }
+    init(duration: KeepAwakeDuration, startedAt: Date) {
+        self.duration = duration
+        self.startedAt = startedAt
+    }
+
+    var endsAt: Date? { duration.interval.map { startedAt.addingTimeInterval($0 + extraTime) } }
+
+    /// Only a timed run has an end to push back.
+    var canExtend: Bool { duration.interval != nil }
+
+    mutating func extend(by seconds: TimeInterval) {
+        guard canExtend else { return }
+        extraTime += seconds
+    }
 
     /// Seconds left, never negative; nil while running indefinitely.
     func remaining(at now: Date) -> TimeInterval? {
@@ -48,7 +63,28 @@ struct KeepAwakeSession {
         return now >= endsAt
     }
 
-    /// The disabled status line at the top of the Keep Awake submenu.
+    /// Status line with the wall-clock end: "On — 42 min left · until 15:30".
+    func statusLabel(at now: Date, clock: DateFormatter = Self.clock) -> String {
+        let label = Self.statusLabel(remaining: remaining(at: now))
+        guard let endsAt else { return label }
+        return "\(label) · until \(clock.string(from: endsAt))"
+    }
+
+    /// Confirmation toast when a run starts ("on") or is extended ("extended").
+    func startToast(_ headline: String = "Keep Awake on", clock: DateFormatter = Self.clock) -> String {
+        guard let endsAt else { return headline }
+        return "\(headline) · until \(clock.string(from: endsAt))"
+    }
+
+    /// The user's own short time format (12 h or 24 h, as set in System Settings).
+    static var clock: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter
+    }
+
+    /// The remaining-time part of the status line.
     static func statusLabel(remaining: TimeInterval?) -> String {
         guard let remaining else { return "On until you turn it off" }
         guard remaining >= 60 else { return "On — less than 1 min left" }

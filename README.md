@@ -145,9 +145,11 @@ are environment-bound and covered by manual use.
 ## Keep Awake
 
 **Keep Awake** in the menu-bar menu keeps the Mac from idle-sleeping for 15
-minutes, 1, 2 or 4 hours, or indefinitely. While it is on, the menu-bar icon
-turns into a filled cup and the submenu shows the time left; **Turn Off** ends it
-early. By default the display stays on too; tick **Allow Display to Sleep** to let
+minutes, 1, 2 or 4 hours, or indefinitely. A toast confirms it (`Keep Awake on ·
+until 15:30`) and another says when it ends. While it is on, the menu-bar icon turns
+into a filled cup and the submenu shows the time left and the end time
+(`On — 42 min left · until 15:30`); **Add 15 Minutes** pushes a timed run back and
+**Turn Off** ends it early. By default the display stays on too; tick **Allow Display to Sleep** to let
 the screen turn off while the Mac keeps working (downloads, builds). The setting is
 remembered.
 

@@ -17,7 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        KeepAwakeController.shared.stop() // macOS would release them anyway; be explicit
+        KeepAwakeController.shared.stopForTermination() // macOS would release them anyway; be explicit
     }
 
     private func setupStatusItem() {
@@ -117,7 +117,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         keepAwakeMenu.removeAllItems()
         if let session = controller.session {
             let status = NSMenuItem(
-                title: KeepAwakeSession.statusLabel(remaining: session.remaining(at: Date())),
+                title: session.statusLabel(at: Date()),
                 action: nil,
                 keyEquivalent: ""
             )
@@ -133,7 +133,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
             keepAwakeMenu.addItem(item)
         }
         if controller.isActive {
+            keepAwakeMenu.addItem(.separator())
+            if controller.session?.canExtend == true {
+                let extend = NSMenuItem(title: "Add 15 Minutes", action: #selector(extendKeepAwake), keyEquivalent: "")
+                extend.image = NSImage(systemSymbolName: "plus.circle", accessibilityDescription: "Add 15 Minutes")
+                extend.target = self
+                keepAwakeMenu.addItem(extend)
+            }
             let off = NSMenuItem(title: "Turn Off", action: #selector(stopKeepAwake), keyEquivalent: "")
+            off.image = NSImage(systemSymbolName: "power", accessibilityDescription: "Turn Off")
             off.target = self
             keepAwakeMenu.addItem(off)
         }
@@ -162,6 +170,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
     }
 
     @objc private func stopKeepAwake() { KeepAwakeController.shared.stop() }
+
+    @objc private func extendKeepAwake() { KeepAwakeController.shared.extend(by: 15 * 60) }
 
     @objc private func toggleAllowDisplaySleep() {
         KeepAwakeController.shared.allowDisplaySleep.toggle()

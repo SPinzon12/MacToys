@@ -48,4 +48,43 @@ struct KeepAwakeTests {
     @Test func durationTitles() {
         #expect(KeepAwakeDuration.allCases.map(\.title) == ["15 Minutes", "1 Hour", "2 Hours", "4 Hours", "Indefinitely"])
     }
+
+    // MARK: - Extending and end-time labels
+
+    private var clock: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }
+
+    @Test func extendingPushesTheEndBack() {
+        var session = KeepAwakeSession(duration: .minutes15, startedAt: start)
+        session.extend(by: 15 * 60)
+        session.extend(by: 15 * 60)
+        #expect(session.endsAt == start.addingTimeInterval(45 * 60))
+        #expect(session.remaining(at: start.addingTimeInterval(20 * 60)) == TimeInterval(25 * 60))
+    }
+
+    @Test func extendingIndefiniteDoesNothing() {
+        var session = KeepAwakeSession(duration: .indefinitely, startedAt: start)
+        session.extend(by: 15 * 60)
+        #expect(session.endsAt == nil)
+        #expect(!session.canExtend)
+        #expect(KeepAwakeSession(duration: .hour1, startedAt: start).canExtend)
+    }
+
+    @Test func statusLabelWithEndTime() {
+        let session = KeepAwakeSession(duration: .hour1, startedAt: start) // 2027-01-15 08:00 UTC
+        #expect(session.statusLabel(at: start.addingTimeInterval(18 * 60), clock: clock) == "On — 42 min left · until 09:00")
+        let forever = KeepAwakeSession(duration: .indefinitely, startedAt: start)
+        #expect(forever.statusLabel(at: start, clock: clock) == "On until you turn it off")
+    }
+
+    @Test func startToastText() {
+        #expect(KeepAwakeSession(duration: .hour1, startedAt: start).startToast(clock: clock) == "Keep Awake on · until 09:00")
+        #expect(KeepAwakeSession(duration: .indefinitely, startedAt: start).startToast(clock: clock) == "Keep Awake on")
+    }
 }
+

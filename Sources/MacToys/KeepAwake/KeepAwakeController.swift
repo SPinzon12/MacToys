@@ -52,17 +52,46 @@ final class KeepAwakeController {
             presentFailure()
             return
         }
-        session = KeepAwakeSession(duration: duration, startedAt: Date())
+        let session = KeepAwakeSession(duration: duration, startedAt: Date())
+        self.session = session
         scheduleEnd()
         onChange?()
+        Toast.show(session.startToast(), leading: .symbol("cup.and.saucer.fill"))
+    }
+
+    /// "Add 15 Minutes": pushes a timed run's end back without restarting it.
+    func extend(by seconds: TimeInterval) {
+        guard var session, session.canExtend else { return }
+        session.extend(by: seconds)
+        self.session = session
+        endTimer?.invalidate()
+        scheduleEnd()
+        onChange?()
+        Toast.show(session.startToast("Keep Awake extended"), leading: .symbol("cup.and.saucer.fill"))
     }
 
     func stop() {
+        stop(toast: "Keep Awake off")
+    }
+
+    private func stop(toast: String) {
+        let wasActive = isActive
         endTimer?.invalidate()
         endTimer = nil
         releaseAssertions()
         session = nil
         onChange?()
+        if wasActive {
+            Toast.show(toast, leading: .symbol("cup.and.saucer"))
+        }
+    }
+
+    /// Quitting: release quietly, no toast for a window that is going away.
+    func stopForTermination() {
+        endTimer?.invalidate()
+        endTimer = nil
+        releaseAssertions()
+        session = nil
     }
 
     // MARK: - Timing
@@ -80,7 +109,7 @@ final class KeepAwakeController {
     private func expireIfNeeded() {
         guard let session else { return }
         if session.isExpired(at: Date()) {
-            stop()
+            stop(toast: "Keep Awake ended — your Mac can sleep again")
         } else {
             endTimer?.invalidate()
             scheduleEnd() // woke early: re-arm for the remaining time
