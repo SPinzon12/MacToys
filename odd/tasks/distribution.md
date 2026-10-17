@@ -68,3 +68,5 @@ Branch: `main` (repo convention, no remote yet). Delivery: ask-on-risk. Test run
   page, unsigned app removed on signing failure (trap ERR, tested with a bogus
   identity), BUNDLE_ID validated, zip without __MACOSX, pending Launch-at-Login
   approval cancellable (mixed state). Release rerun: checksums OK, 69 tests green.
+- 2026-10-16 native review (3990a62..aa5b3b9, high/item 5): user chose "Skip this
+  time" → declined for this candidate; independent verifier PASS stands.
