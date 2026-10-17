@@ -12,7 +12,17 @@ enum GlassSurface {
             glass.cornerRadius = radius
             glass.style = .regular
             glass.contentView = hosting
-            return glass
+            // The glass rounds its own surface but the view stays a rectangle, and
+            // the window then showed dark square corners outside the curve. A
+            // container clipped to the same radius removes them.
+            let container = NSView(frame: NSRect(origin: .zero, size: size))
+            container.wantsLayer = true
+            container.layer?.cornerRadius = radius
+            container.layer?.cornerCurve = .continuous
+            container.layer?.masksToBounds = true
+            glass.autoresizingMask = [.width, .height]
+            container.addSubview(glass)
+            return container
         }
         let effect = NSVisualEffectView(frame: NSRect(origin: .zero, size: size))
         effect.material = .popover
