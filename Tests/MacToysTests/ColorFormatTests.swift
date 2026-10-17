@@ -21,13 +21,6 @@ struct ColorFormatTests {
         #expect(ColorFormat.hsl.string(r: 128, g: 128, b: 128) == "hsl(0, 0%, 50%)")
     }
 
-    @Test func cyclesInBothDirections() {
-        #expect(ColorFormat.hex.next == .rgb)
-        #expect(ColorFormat.rgb.next == .hsl)
-        #expect(ColorFormat.hsl.next == .hex)
-        #expect(ColorFormat.hex.previous == .hsl)
-    }
-
     @Test func titles() {
         #expect(ColorFormat.allCases.map(\.title) == ["HEX", "RGB", "HSL"])
     }

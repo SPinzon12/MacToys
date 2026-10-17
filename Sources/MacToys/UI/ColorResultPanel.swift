@@ -232,7 +232,7 @@ final class ColorResultPanelController {
         model?.history = history
     }
 
-    func close() {
+    func close(animated: Bool = true) {
         for monitor in [keyMonitor, clickMonitor].compactMap({ $0 }) {
             NSEvent.removeMonitor(monitor)
         }
@@ -245,6 +245,11 @@ final class ColorResultPanelController {
         guard let window else { return }
         self.window = nil
         model = nil
+        guard animated else {
+            window.orderOut(nil)
+            CATransaction.flush() // out of the next screen capture right now
+            return
+        }
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = Theme.Motion.dismissDuration
             window.animator().alphaValue = 0
@@ -280,7 +285,10 @@ final class ColorResultPanelController {
     /// Down-right of the pointer (where the color was just picked), kept on its screen.
     private static func origin(for size: NSSize) -> NSPoint {
         let mouse = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main
+        // Grown by a point: NSMouseInRect excludes the top/right edges, so a pick on
+        // a display's top row would otherwise match no screen.
+        let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame.insetBy(dx: -1, dy: -1), false) }
+            ?? NSScreen.main
         var x = mouse.x + 18
         var y = mouse.y - size.height - 18
         if let visible = screen?.visibleFrame {

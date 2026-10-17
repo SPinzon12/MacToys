@@ -1,6 +1,7 @@
 import Foundation
 
-/// What the Color Picker copies. Cycled with ⇥ / ← → in the lens and remembered.
+/// What the Color Picker copies. The format copied last in the result card is
+/// remembered as the default.
 enum ColorFormat: String, CaseIterable {
     case hex
     case rgb
@@ -19,11 +20,6 @@ enum ColorFormat: String, CaseIterable {
             return "hsl(\(h), \(s)%, \(l)%)"
         }
     }
-
-    var next: ColorFormat { Self.allCases[(index + 1) % Self.allCases.count] }
-    var previous: ColorFormat { Self.allCases[(index + Self.allCases.count - 1) % Self.allCases.count] }
-
-    private var index: Int { Self.allCases.firstIndex(of: self)! }
 
     /// Hue in degrees, saturation and lightness in percent, rounded like CSS tools.
     static func hsl(r: UInt8, g: UInt8, b: UInt8) -> (Int, Int, Int) {

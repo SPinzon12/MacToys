@@ -11,6 +11,10 @@ final class ColorPickerController {
     static let shared = ColorPickerController()
 
     private var sampling = false
+    /// Held for the session: the sampler is documented to keep itself alive, but
+    /// if it were ever freed without calling back, `sampling` would stick and the
+    /// hotkey would stop working.
+    private var sampler: NSColorSampler?
     private var history = ColorHistory.load()
 
     private init() {}
@@ -19,8 +23,11 @@ final class ColorPickerController {
         // The system loupe is already up: it owns Esc and the click.
         guard !sampling else { return }
         sampling = true
-        ColorResultPanelController.shared.close()
-        NSColorSampler().show { selected in
+        // Gone at once, not faded: the loupe must not sample the old card.
+        ColorResultPanelController.shared.close(animated: false)
+        let sampler = NSColorSampler()
+        self.sampler = sampler
+        sampler.show { selected in
             // Documented to run on the main thread.
             MainActor.assumeIsolated {
                 ColorPickerController.shared.finishSampling(selected)
@@ -30,6 +37,7 @@ final class ColorPickerController {
 
     private func finishSampling(_ selected: NSColor?) {
         sampling = false
+        sampler = nil
         guard let selected, let color = PickedColor(selected) else { return } // cancelled
         let format = ColorFormat.saved
         Self.copy(color.string(in: format))

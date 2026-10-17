@@ -53,7 +53,7 @@ launch; remove its old permission entries the same way.
 
 | Module         | Hotkey | T1 (skeleton)       | T2 (Color Picker) | T3 (Text Extractor) | T4 (Advanced Paste) |
 | -------------- | ------ | ------------------- | ----------------- | ------------------- | ------------------- |
-| Color Picker   | ⌃⇧C    | ✅ wired (stub)     | ✅ lens → HEX copy  | —                   | —                   |
+| Color Picker   | ⌃⇧C    | ✅ wired (stub)     | ✅ system loupe + card | —                | —                   |
 | Text Extractor | ⌃⇧O    | ✅ wired (stub)     | —                 | ✅ region + word OCR | —                   |
 | Advanced Paste | ⌃⇧V    | ✅ wired (stub)     | —                 | —                   | ✅ transforms + tests |
 
@@ -180,9 +180,9 @@ the window (Liquid Glass `NSGlassEffectView` on macOS 26+, behind-window
 continuous rounded corners, quiet typography, SF Symbols in hierarchical
 rendering and a single accent color. Tokens live in
 `Sources/MacToys/UI/Theme.swift`. The ⌃⇧V panel is SwiftUI (fade + scale
-in, keycap footer, animated selection); the two screen overlays stay AppKit and
-paint the same language (rounded accent selection with corner handles and an
-outer glow, glass lens card with a crisp pixel grid, swatch, hex and rgb).
+in, keycap footer, animated selection); the Text Extractor overlay stays AppKit
+and paints the same language (rounded accent selection with corner handles and an
+outer glow). The Color Picker uses the system loupe and a SwiftUI result card.
 Copying from the Text Extractor shows a small glass toast (`Copied 42 chars`); the
 Color Picker shows its result card instead.
 
@@ -279,7 +279,7 @@ Sources/MacToys/
   Permissions.swift       Screen Recording / Accessibility preflight
   Modules/                one module entry per feature
   UI/                     design tokens, clipboard panel, copy toasts
-  ColorPicker/            Color Picker overlay (session + lens view)
+  ColorPicker/            system-loupe flow, formats, recent colors, CSS names
   TextExtractor/          Text Extractor overlay (session + selection + OCR)
   AdvancedPaste/          coordinator + pure transforms (tested) + ⌘V paste
     History/              clipboard history: capture rules, store, poller
