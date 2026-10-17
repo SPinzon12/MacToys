@@ -62,3 +62,7 @@ work checked with real-window screenshots (no UI test runner on this toolchain).
   Color Picker redesign: round loupe + color ring + HEX/RGB/HSL (833eb4b, 6 tests).
   Accent decision — user chose "Morado MacToys (Recommended)": always the logo
   purple (Theme.accentNS), not the system accent. Already in place (5a4bd21).
+- Color Picker verifier: PASS, 0 blockers (cursor hide/unhide balanced on every
+  exit; sampling unchanged; HSL matches colorsys). Applied: card clamped to the
+  cursor's display (multi-display gap), stale comments, unused helper removed.
+  94 tests. Next: U3 onboarding, U4 Settings.
