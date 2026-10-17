@@ -44,16 +44,6 @@ enum ColorFormat: String, CaseIterable {
         return (Int(hue.rounded()) % 360, Int((saturation * 100).rounded()), Int((lightness * 100).rounded()))
     }
 
-    /// Dark text reads better on this color (WCAG relative luminance > 0.4).
-    static func prefersDarkText(r: UInt8, g: UInt8, b: UInt8) -> Bool {
-        func linear(_ c: UInt8) -> Double {
-            let v = Double(c) / 255
-            return v <= 0.03928 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4)
-        }
-        let luminance = 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b)
-        return luminance > 0.4
-    }
-
     // MARK: - Remembered choice
 
     private static let defaultsKey = "colorPicker.format"

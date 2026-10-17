@@ -1,4 +1,4 @@
-/// Color Picker — ⌃⇧C / menu → magnifier-lens overlay; click copies HEX.
+/// Color Picker — ⌃⇧C / panel → round loupe overlay; click copies HEX, RGB or HSL.
 enum ColorPickerModule {
     static func trigger() {
         // Carbon hotkey callbacks are not main-actor isolated; hop before AppKit.

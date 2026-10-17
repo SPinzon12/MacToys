@@ -172,6 +172,15 @@ final class LensView: NSView {
 
     // MARK: - Card
 
+    /// The frame, in this view's coordinates, of the display containing `point`.
+    private func screenRect(containing point: CGPoint) -> CGRect? {
+        guard let window else { return nil }
+        let global = window.convertPoint(toScreen: convert(point, to: nil))
+        guard let screen = NSScreen.screens.first(where: { NSMouseInRect(global, $0.frame, false) }) else { return nil }
+        let inWindow = window.convertFromScreen(screen.frame)
+        return convert(inWindow, from: nil)
+    }
+
     private static let valueFont = NSFont.monospacedSystemFont(ofSize: 15, weight: .semibold)
     private static let chipFont = NSFont.systemFont(ofSize: 10, weight: .bold)
     private static let hintFont = NSFont.systemFont(ofSize: 10.5, weight: .medium)
@@ -194,9 +203,12 @@ final class LensView: NSView {
         let height: CGFloat = 84
         let gap: CGFloat = 16
 
+        // Keep the card on the display under the cursor: the view spans every
+        // display, and with mismatched heights its bounds include dead gaps.
+        let area = screenRect(containing: CGPoint(x: loupe.midX, y: loupe.midY)) ?? bounds
         var origin = CGPoint(x: loupe.midX - width / 2, y: loupe.minY - gap - height)
-        if origin.y < bounds.minY + 4 { origin.y = loupe.maxY + gap } // no room below: above
-        origin.x = min(max(origin.x, bounds.minX + 4), bounds.maxX - width - 4)
+        if origin.y < area.minY + 4 { origin.y = loupe.maxY + gap } // no room below: above
+        origin.x = min(max(origin.x, area.minX + 4), area.maxX - width - 4)
         let card = CGRect(origin: origin, size: CGSize(width: width, height: height))
         let shape = NSBezierPath(roundedRect: card, xRadius: 14, yRadius: 14)
 

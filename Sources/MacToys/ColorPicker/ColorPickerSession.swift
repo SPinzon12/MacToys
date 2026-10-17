@@ -12,7 +12,8 @@ enum ColorPickerSpec {
 
 /// One Color Picker overlay session: a borderless window spanning every display,
 /// a 60 Hz timer sampling the pixel under the cursor, and a magnifier lens.
-/// Left-click copies `#RRGGBB` to the clipboard and ends the session;
+/// Left-click copies the value in the format chosen in the lens (HEX, RGB or
+/// HSL) to the clipboard and ends the session;
 /// Esc, right-click, or re-triggering the hotkey cancels it.
 @MainActor
 final class ColorPickerSession: NSObject {

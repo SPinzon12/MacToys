@@ -31,12 +31,4 @@ struct ColorFormatTests {
     @Test func titles() {
         #expect(ColorFormat.allCases.map(\.title) == ["HEX", "RGB", "HSL"])
     }
-
-    @Test func readableTextOnSwatch() {
-        // Light colors get dark text and vice versa (relative luminance).
-        #expect(ColorFormat.prefersDarkText(r: 255, g: 255, b: 255))
-        #expect(ColorFormat.prefersDarkText(r: 255, g: 210, b: 60))
-        #expect(!ColorFormat.prefersDarkText(r: 0, g: 0, b: 0))
-        #expect(!ColorFormat.prefersDarkText(r: 30, g: 60, b: 200))
-    }
 }
