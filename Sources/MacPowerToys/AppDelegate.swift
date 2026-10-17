@@ -1,8 +1,9 @@
 import AppKit
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenuItemValidation {
     private var statusItem: NSStatusItem?
+    private var launchAtLoginItem: NSMenuItem?
     private let hotKeys = HotKeys()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -23,6 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let menu = NSMenu()
         menu.addItem(headerItem())
+        menu.addItem(versionItem())
         menu.addItem(.separator())
         menu.addItem(moduleItem("Color Picker", symbol: "eyedropper", action: #selector(runColorPicker), key: "c"))
         menu.addItem(moduleItem("Text Extractor", symbol: "text.viewfinder", action: #selector(runTextExtractor), key: "o"))
@@ -33,6 +35,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         clear.target = self
         menu.addItem(clear)
         menu.addItem(.separator())
+        let launch = NSMenuItem(title: "Launch at Login", action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
+        launch.target = self
+        if !LaunchAtLogin.isAvailable {
+            launch.toolTip = "Available when running the Mac PowerToys app, not `swift run`."
+        }
+        menu.addItem(launch)
+        launchAtLoginItem = launch
+        menu.addItem(.separator())
         // Target is nil on purpose: quit goes through the responder chain to NSApp.
         let quit = NSMenuItem(
             title: "Quit Mac PowerToys",
@@ -41,6 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         menu.addItem(quit)
 
+        menu.delegate = self
         item.menu = menu
         statusItem = item
     }
@@ -56,6 +67,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return item
     }
 
+    private func versionItem() -> NSMenuItem {
+        let item = NSMenuItem(title: AppVersion.label(), action: nil, keyEquivalent: "")
+        item.attributedTitle = NSAttributedString(
+            string: AppVersion.label(),
+            attributes: [.font: NSFont.menuFont(ofSize: NSFont.smallSystemFontSize), .foregroundColor: NSColor.secondaryLabelColor]
+        )
+        item.isEnabled = false
+        return item
+    }
+
+    /// The login-item state can change in System Settings; read it on every open.
+    func menuWillOpen(_ menu: NSMenu) {
+        guard let item = launchAtLoginItem else { return }
+        item.state = LaunchAtLogin.isAvailable && LaunchAtLogin.isEnabled ? .on : .off
+        item.title = LaunchAtLogin.isAvailable && LaunchAtLogin.needsApproval
+            ? "Launch at Login (approve in System Settings)"
+            : "Launch at Login"
+    }
+
+    /// Disabled (greyed) outside a bundle: `validateMenuItem` runs before display.
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(toggleLaunchAtLogin) { return LaunchAtLogin.isAvailable }
+        return true
+    }
+
     private func moduleItem(_ title: String, symbol: String, action: Selector, key: String) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
         item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)
@@ -67,6 +103,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func runColorPicker() { ColorPickerModule.trigger() }
     @objc private func runTextExtractor() { TextExtractorModule.trigger() }
     @objc private func runAdvancedPaste() { AdvancedPasteModule.trigger() }
+
+    @objc private func toggleLaunchAtLogin() { LaunchAtLogin.toggle() }
 
     @objc private func clearHistory() {
         let alert = NSAlert()
