@@ -4,6 +4,7 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenuItemValidation {
     private var statusItem: NSStatusItem?
     private var launchAtLoginItem: NSMenuItem?
+    private let keepAwakeMenu = NSMenu(title: "Keep Awake")
     private let hotKeys = HotKeys()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -12,6 +13,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         hotKeys.register()
         ClipboardHistoryService.shared.start()
         OCRService.warmUp() // first OCR of a new build path costs ~26 s; pay it now
+        KeepAwakeController.shared.onChange = { [weak self] in self?.updateStatusIcon() }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        KeepAwakeController.shared.stop() // macOS would release them anyway; be explicit
     }
 
     private func setupStatusItem() {
@@ -35,6 +41,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         clear.target = self
         menu.addItem(clear)
         menu.addItem(.separator())
+        let keepAwake = NSMenuItem(title: "Keep Awake", action: nil, keyEquivalent: "")
+        keepAwake.image = NSImage(systemSymbolName: "cup.and.saucer", accessibilityDescription: "Keep Awake")
+        keepAwakeMenu.delegate = self
+        keepAwake.submenu = keepAwakeMenu
+        menu.addItem(keepAwake)
         let launch = NSMenuItem(title: "Launch at Login", action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
         launch.target = self
         if !LaunchAtLogin.isAvailable {
@@ -79,6 +90,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
 
     /// The login-item state can change in System Settings; read it on every open.
     func menuWillOpen(_ menu: NSMenu) {
+        if menu === keepAwakeMenu {
+            rebuildKeepAwakeMenu()
+            return
+        }
         guard let item = launchAtLoginItem else { return }
         item.state = !LaunchAtLogin.isAvailable ? .off
             : LaunchAtLogin.isEnabled ? .on
@@ -92,6 +107,64 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         if menuItem.action == #selector(toggleLaunchAtLogin) { return LaunchAtLogin.isAvailable }
         return true
+    }
+
+    // MARK: - Keep Awake
+
+    /// Rebuilt on every open so the remaining time is current.
+    private func rebuildKeepAwakeMenu() {
+        let controller = KeepAwakeController.shared
+        keepAwakeMenu.removeAllItems()
+        if let session = controller.session {
+            let status = NSMenuItem(
+                title: KeepAwakeSession.statusLabel(remaining: session.remaining(at: Date())),
+                action: nil,
+                keyEquivalent: ""
+            )
+            status.isEnabled = false
+            keepAwakeMenu.addItem(status)
+            keepAwakeMenu.addItem(.separator())
+        }
+        for (index, duration) in KeepAwakeDuration.allCases.enumerated() {
+            let item = NSMenuItem(title: duration.title, action: #selector(startKeepAwake(_:)), keyEquivalent: "")
+            item.tag = index
+            item.target = self
+            item.state = controller.session?.duration == duration ? .on : .off
+            keepAwakeMenu.addItem(item)
+        }
+        if controller.isActive {
+            let off = NSMenuItem(title: "Turn Off", action: #selector(stopKeepAwake), keyEquivalent: "")
+            off.target = self
+            keepAwakeMenu.addItem(off)
+        }
+        keepAwakeMenu.addItem(.separator())
+        let display = NSMenuItem(title: "Allow Display to Sleep", action: #selector(toggleAllowDisplaySleep), keyEquivalent: "")
+        display.target = self
+        display.state = controller.allowDisplaySleep ? .on : .off
+        display.toolTip = "Keep the Mac working (downloads, builds) while the screen turns off."
+        keepAwakeMenu.addItem(display)
+    }
+
+    /// A filled cup while Keep Awake is on, so the state is visible at a glance.
+    private func updateStatusIcon() {
+        let active = KeepAwakeController.shared.isActive
+        statusItem?.button?.image = NSImage(
+            systemSymbolName: active ? "cup.and.saucer.fill" : "wand.and.stars",
+            accessibilityDescription: active ? "MacToys — Keep Awake on" : "MacToys"
+        )
+        statusItem?.button?.toolTip = active ? "MacToys — Keep Awake on" : "MacToys"
+    }
+
+    @objc private func startKeepAwake(_ sender: NSMenuItem) {
+        let durations = KeepAwakeDuration.allCases
+        guard durations.indices.contains(sender.tag) else { return }
+        KeepAwakeController.shared.start(durations[sender.tag])
+    }
+
+    @objc private func stopKeepAwake() { KeepAwakeController.shared.stop() }
+
+    @objc private func toggleAllowDisplaySleep() {
+        KeepAwakeController.shared.allowDisplaySleep.toggle()
     }
 
     private func moduleItem(_ title: String, symbol: String, action: Selector, key: String) -> NSMenuItem {

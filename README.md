@@ -11,6 +11,8 @@ to the Mac:
 - **Clipboard history + Advanced Paste** — a Spotlight-style panel behind ⌃⇧V:
   search everything you copied, paste it back, or paste it as plain text, OCR,
   a file, JSON or Markdown.
+- **Keep Awake** — stop the Mac from sleeping for 15 min, 1 h, 2 h, 4 h or until
+  you turn it off, straight from the menu bar.
 
 ## Download
 
@@ -139,6 +141,22 @@ Unit tests cover the pure transforms (CSV/XML → JSON, HTML → Markdown, plain
 text, menu validity) and the clipboard history rules (capture, secrets,
 dedupe, cap, search, persistence) with `swift test`; OCR, transcoding, and paste synthesis
 are environment-bound and covered by manual use.
+
+## Keep Awake
+
+**Keep Awake** in the menu-bar menu keeps the Mac from idle-sleeping for 15
+minutes, 1, 2 or 4 hours, or indefinitely. While it is on, the menu-bar icon
+turns into a filled cup and the submenu shows the time left; **Turn Off** ends it
+early. By default the display stays on too; tick **Allow Display to Sleep** to let
+the screen turn off while the Mac keeps working (downloads, builds). The setting is
+remembered.
+
+It uses the same IOKit power assertions as `caffeinate` (named "MacToys Keep
+Awake" in `pmset -g assertions`). macOS releases them when MacToys quits or
+crashes, so the Mac can never be left unable to sleep. A timed run is checked
+against the clock when the Mac wakes, so it never outlives its end. It does not
+keep a closed-lid MacBook awake — that needs administrator changes to the power
+settings and is intentionally left out. No hotkey: it is a set-and-forget toggle.
 
 ## Design
 
